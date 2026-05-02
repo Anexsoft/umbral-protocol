@@ -1,0 +1,30 @@
+fonts:
+  ui: "Rajdhani, Orbitron, monospace"
+  display: "Rajdhani, Orbitron, monospace"
+  mono: "monospace"
+
+sizes:
+  xxs: "10px"
+  xs: "12px"
+  sm: "14px"
+  md: "16px"
+  lg: "18px"
+  xl: "20px"
+  xxl: "22px"
+  xxxl: "24px"
+  display_sm: "28px"
+  display_md: "32px"
+  display_lg: "36px"
+  display_xl: "40px"
+  display_2xl: "42px"
+  display_3xl: "48px"
+  hero_sm: "52px"
+  hero: "82px"
+
+weights:
+  regular: "normal"
+  bold: "bold"
+
+letter_spacing:
+  normal: 0
+  wide: 4

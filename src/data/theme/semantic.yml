@@ -1,0 +1,58 @@
+transparent: "rgba(0,0,0,0)"
+
+text:
+  primary: "#ffffff"
+  soft: "#eeeeee"
+  strong: "#cccccc"
+  muted: "#999999"
+  label: "#888888"
+  cooldown: "#777777"
+  separator: "#444444"
+  accent: "#00ffff"
+  accent_soft: "#7fe8ff"
+  accent_scan: "#00e6e6"
+  success: "#00ff00"
+  warning: "#ff9900"
+  emphasis: "#ffb347"
+  critical: "#ff3333"
+  danger: "#ff2222"
+  danger_soft: "#ff8888"
+
+surface:
+  app: "#0a0f14"
+  menu: "#0a0c11"
+  panel: "#0a0e12"
+  panel_elevated: "#0a1018"
+  gameplay: "#0d1520"
+  overlay: "#050508"
+  hud: "#111111"
+  keycap: "#08141c"
+  scrim: "#000000"
+
+gfx:
+  frame: "#ffffff"
+  xp_track: "#333333"
+  bar_track: "#222222"
+  life: "#ff9900"
+  stamina: "#00ffff"
+  grid: "#193146"
+  bullet: "#ffffff"
+  melee_flash: "#ffffff"
+
+fx:
+  scanline: "#00e6e6"
+  dash_trail: "#00ffff"
+  laser: "#ff0000"
+  blow: "#ff9900"
+  grenade: "#66ffcc"
+  grenade_burst: "#ffcc33"
+  enemy_tint_high: "#ff0202"
+  enemy_tint_mid: "#ff2222"
+  enemy_tint_low: "#aa3333"
+  damage_popup_fill: "#ff0000"
+  damage_popup_stroke: "#000000"
+
+mode:
+  standard: "#ffff00"
+  spread: "#ff00ff"
+  power: "#ff6600"

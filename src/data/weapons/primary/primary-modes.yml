@@ -1,0 +1,19 @@
+single:
+  label: "SINGLE"
+  description: "Precision fire with stable cadence and low commitment."
+  fire_rate: 1
+  reload_time: 1.5
+spread:
+  label: "SPREAD"
+  description: "Multi-pellet burst for close-range pressure and wider coverage."
+  spread_damage_multiplier: 0.5
+  spread_count: 3
+  fire_rate: 1.5
+  reload_time: 2.2
+power:
+  label: "POWER"
+  description: "Heavy impact shot with higher damage, slower cycle, and knockback."
+  damage_multiplier: 1.5
+  knockback_distance: 720
+  fire_rate: 2
+  reload_time: 3.0

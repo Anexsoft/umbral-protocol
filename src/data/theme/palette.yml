@@ -1,0 +1,55 @@
+surface:
+  app: "#0a0f14"
+  menu: "#0a0c11"
+  panel: "#0a0e12"
+  panel_elevated: "#0a1018"
+  gameplay: "#0d1520"
+  overlay: "#050508"
+  hud: "#111111"
+  keycap: "#08141c"
+  scrim: "#000000"
+
+neutral:
+  white: "#ffffff"
+  soft: "#eeeeee"
+  strong: "#cccccc"
+  muted: "#999999"
+  label: "#888888"
+  cooldown: "#777777"
+  subtle: "#444444"
+  track: "#333333"
+  bar: "#222222"
+  black: "#000000"
+
+accent:
+  cyan: "#00e6e6"
+  cyan_bright: "#00ffff"
+  cyan_soft: "#7fe8ff"
+  grid: "#193146"
+
+warning:
+  amber: "#ffb347"
+  orange: "#ff9900"
+  yellow: "#ffff00"
+  gold: "#ffd700"
+  orange_strong: "#ff6600"
+
+danger:
+  red: "#ff0000"
+  red_hot: "#ff0202"
+  red_strong: "#ff2222"
+  red_soft: "#ff3333"
+  rose: "#ff4d6d"
+  crimson: "#cc2222"
+  salmon: "#ff6666"
+  salmon_soft: "#ff8888"
+  blood: "#aa3333"
+
+success:
+  green: "#00ff00"
+  mint: "#00ff99"
+
+special:
+  magenta: "#ff00ff"
+  grenade: "#66ffcc"
+  grenade_burst: "#ffcc33"

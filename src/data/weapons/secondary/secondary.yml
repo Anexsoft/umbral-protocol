@@ -1,0 +1,6 @@
+name: "C-Knife"
+description: "Tactical high-frequency blade designed for multi-target suppression. High stamina draw per swing with an extended thermal recovery window."
+damage_bonus_ratio: 0.25
+attack_radius: 84
+stamina_cost: 5
+cooldown: 3.0

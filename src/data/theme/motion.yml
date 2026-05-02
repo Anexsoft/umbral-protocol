@@ -1,0 +1,13 @@
+blink:
+  interval_ms: 250
+  alpha_on: 0.8
+  alpha_off: 0.3
+
+durations:
+  micro_ms: 100
+  short_ms: 150
+  medium_ms: 300
+  pulse_ms: 500
+  prompt_ms: 600
+  long_ms: 800
+  scanline_ms: 5000

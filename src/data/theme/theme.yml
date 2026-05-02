@@ -1,0 +1,4 @@
+palette: "./palette.yml"
+typography: "./typography.yml"
+semantic: "./semantic.yml"
+motion: "./motion.yml"

@@ -1,0 +1,21 @@
+- name: "Dash"
+  key: "SPACE"
+  description: "Short burst in aim direction for repositioning or escape."
+  cooldown: 3
+  stamina_cost: 20
+- name: "Blast"
+  key: "Q"
+  description: "Short-range radial blast centered on the operator. The shockwave blooms from the body and expands outward, damaging all hostiles inside the final radius."
+  cooldown: 10
+  damage_multiplier: 1.5
+  radius_max: 120
+  stamina_cost: 30
+- name: "Burst"
+  key: "E"
+  description: "Combat overdrive that accelerates movement and weapon cadence for a short window."
+  cooldown: 6
+  duration: 4
+  move_speed_bonus_ratio: 0.3
+  fire_rate_bonus_ratio: 0.45
+  reload_speed_bonus_ratio: 0.35
+  stamina_cost: 15

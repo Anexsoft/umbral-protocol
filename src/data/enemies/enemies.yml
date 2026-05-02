@@ -1,0 +1,136 @@
+zombie:
+  name: "Infected Shambler"
+  description: "A slow-moving undead creature that attacks by biting."
+  attack_id: "melee"
+  attack_range: 42
+  base_stats:
+    vit: 70
+    attack: 4
+    speed: 150
+    defense: 0.02
+    rewards: [2, 5]
+    score: [12, 28]
+    xp: [8, 14]
+    scale: 1.5
+
+crawler:
+  name: "Acid Crawler"
+  description: "Fast low-profile bio-hazard."
+  attack_id: "melee"
+  attack_range: 34
+  base_stats:
+    vit: 42
+    attack: 6
+    speed: 190
+    defense: 0.00
+    rewards: [5, 12]
+    score: [35, 65]
+    xp: [14, 22]
+    scale: 1
+
+stalker:
+  name: "Vector Stalker"
+  description: "Flanking predator—fragile but relentless."
+  attack_id: "melee"
+  attack_range: 38
+  base_stats:
+    vit: 34
+    attack: 7
+    speed: 245
+    defense: 0.00
+    rewards: [6, 14]
+    score: [45, 85]
+    xp: [18, 30]
+    scale: 0.95
+
+brute:
+  name: "Bulk Enforcer"
+  description: "Heavy armor plating; hits like a freight train."
+  attack_id: "melee"
+  attack_range: 52
+  base_stats:
+    vit: 190
+    attack: 16
+    speed: 90
+    defense: 0.12
+    rewards: [14, 26]
+    score: [120, 220]
+    xp: [45, 72]
+    scale: 2.1
+
+swarmer:
+  name: "Swarm Drone"
+  description: "Tiny swarm unit—dies fast, arrives in numbers."
+  attack_id: "melee"
+  attack_range: 28
+  base_stats:
+    vit: 16
+    attack: 2
+    speed: 270
+    defense: 0.00
+    rewards: [1, 4]
+    score: [6, 14]
+    xp: [3, 6]
+    scale: 0.65
+
+spitter:
+  name: "Corrosive Spitter"
+  description: "Medium threat; acidic residue weakens armor."
+  attack_id: "range"
+  attack_range: 280
+  base_stats:
+    vit: 62
+    attack: 8
+    speed: 160
+    defense: 0.03
+    rewards: [9, 16]
+    score: [70, 115]
+    xp: [25, 35]
+    scale: 1.2
+
+phantom:
+  name: "Phase Wraith"
+  description: "Erratic movement pattern; harder to track."
+  attack_id: "melee"
+  attack_range: 36
+  base_stats:
+    vit: 55
+    attack: 8
+    speed: 225
+    defense: 0.04
+    rewards: [11, 20]
+    score: [95, 165]
+    xp: [32, 48]
+    scale: 1.1
+
+boss_colossus:
+  name: "Colossus UNIT-09"
+  description: "Containment breach primary—massive kinetic threat."
+  boss: true
+  attack_id: "melee"
+  attack_range: 66
+  base_stats:
+    vit: 420
+    attack: 12
+    speed: 88
+    defense: 0.10
+    rewards: [90, 150]
+    score: [850, 1500]
+    xp: [280, 420]
+    scale: 2.9
+
+boss_hivemind:
+  name: "Hivemind CORE"
+  description: "Neural cluster boss—summons pressure until destroyed."
+  boss: true
+  attack_id: "range"
+  attack_range: 340
+  base_stats:
+    vit: 380
+    attack: 13
+    speed: 102
+    defense: 0.09
+    rewards: [100, 170]
+    score: [1100, 1800]
+    xp: [360, 520]
+    scale: 2.5
