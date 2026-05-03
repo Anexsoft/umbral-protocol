@@ -1,21 +1,25 @@
 - round: 1
+  consumables: { total: 2 }
   enemies:
     - { id: spitter, count: 4, level: [1, 2] }
     - { id: swarmer, count: 4, level: [1, 1] }
 
 - round: 2
+  consumables: { total: 2 }
   enemies:
     - { id: zombie, count: 5, level: [1, 2] }
     - { id: crawler, count: 3, level: [1, 2] }
     - { id: swarmer, count: 4, level: [1, 2] }
 
 - round: 3
+  consumables: { total: 2 }
   enemies:
     - { id: zombie, count: 4, level: [2, 3] }
     - { id: crawler, count: 4, level: [2, 3] }
     - { id: stalker, count: 2, level: [2, 3] }
 
 - round: 4
+  consumables: { total: 2 }
   enemies:
     - { id: zombie, count: 4, level: [2, 3] }
     - { id: crawler, count: 4, level: [2, 3] }
@@ -24,12 +28,14 @@
 
 - round: 5
   isBossRound: true
+  consumables: { total: 2 }
   enemies:
     - { id: boss_colossus, count: 1, level: [4, 5] }
     - { id: zombie, count: 4, level: [3, 4] }
     - { id: swarmer, count: 6, level: [3, 4] }
 
 - round: 6
+  consumables: { total: 3 }
   enemies:
     - { id: zombie, count: 5, level: [4, 5] }
     - { id: crawler, count: 4, level: [4, 5] }
@@ -37,6 +43,7 @@
     - { id: spitter, count: 2, level: [4, 5] }
 
 - round: 7
+  consumables: { total: 3 }
   enemies:
     - { id: crawler, count: 5, level: [5, 6] }
     - { id: stalker, count: 4, level: [5, 6] }
@@ -44,6 +51,7 @@
     - { id: swarmer, count: 8, level: [5, 6] }
 
 - round: 8
+  consumables: { total: 3 }
   enemies:
     - { id: zombie, count: 5, level: [6, 7] }
     - { id: crawler, count: 5, level: [6, 7] }
@@ -52,6 +60,7 @@
     - { id: stalker, count: 4, level: [6, 7] }
 
 - round: 9
+  consumables: { total: 4 }
   enemies:
     - { id: brute, count: 2, level: [7, 8] }
     - { id: phantom, count: 3, level: [7, 8] }
@@ -61,6 +70,7 @@
 
 - round: 10
   isBossRound: true
+  consumables: { total: 2 }
   enemies:
     - { id: boss_hivemind, count: 1, level: [8, 10] }
     - { id: stalker, count: 5, level: [8, 9] }
@@ -68,6 +78,7 @@
     - { id: phantom, count: 2, level: [8, 9] }
 
 - round: 11
+  consumables: { total: 5 }
   enemies:
     - { id: zombie, count: 6, level: [9, 10] }
     - { id: crawler, count: 6, level: [9, 10] }
@@ -76,6 +87,7 @@
     - { id: swarmer, count: 8, level: [9, 10] }
 
 - round: 12
+  consumables: { total: 3 }
   enemies:
     - { id: crawler, count: 6, level: [10, 11] }
     - { id: stalker, count: 6, level: [10, 11] }
@@ -84,6 +96,7 @@
     - { id: spitter, count: 3, level: [10, 11] }
 
 - round: 13
+  consumables: { total: 4 }
   enemies:
     - { id: zombie, count: 6, level: [11, 12] }
     - { id: brute, count: 2, level: [11, 12] }
@@ -92,6 +105,7 @@
     - { id: swarmer, count: 10, level: [11, 12] }
 
 - round: 14
+  consumables: { total: 4 }
   enemies:
     - { id: crawler, count: 7, level: [12, 13] }
     - { id: stalker, count: 6, level: [12, 13] }
@@ -101,6 +115,7 @@
 
 - round: 15
   isBossRound: true
+  consumables: { total: 3 }
   enemies:
     - { id: boss_colossus, count: 1, level: [12, 14] }
     - { id: brute, count: 3, level: [12, 13] }
@@ -109,6 +124,7 @@
     - { id: stalker, count: 4, level: [12, 13] }
 
 - round: 16
+  consumables: { total: 5 }
   enemies:
     - { id: zombie, count: 7, level: [13, 14] }
     - { id: crawler, count: 7, level: [13, 14] }
@@ -117,6 +133,7 @@
     - { id: spitter, count: 4, level: [13, 14] }
 
 - round: 17
+  consumables: { total: 5 }
   enemies:
     - { id: crawler, count: 8, level: [14, 15] }
     - { id: stalker, count: 8, level: [14, 15] }
@@ -126,6 +143,7 @@
     - { id: swarmer, count: 10, level: [14, 15] }
 
 - round: 18
+  consumables: { total: 5 }
   enemies:
     - { id: zombie, count: 8, level: [15, 16] }
     - { id: brute, count: 4, level: [15, 16] }
@@ -134,6 +152,7 @@
     - { id: stalker, count: 6, level: [15, 16] }
 
 - round: 19
+  consumables: { total: 5 }
   enemies:
     - { id: crawler, count: 8, level: [16, 17] }
     - { id: stalker, count: 8, level: [16, 17] }
@@ -144,6 +163,7 @@
 
 - round: 20
   isBossRound: true
+  consumables: { total: 5 }
   enemies:
     - { id: boss_hivemind, count: 1, level: [16, 18] }
     - { id: brute, count: 4, level: [16, 17] }
@@ -153,6 +173,7 @@
     - { id: crawler, count: 6, level: [16, 17] }
 
 - round: 21
+  consumables: { total: 5 }
   enemies:
     - { id: zombie, count: 8, level: [17, 18] }
     - { id: crawler, count: 8, level: [17, 18] }
@@ -162,6 +183,7 @@
     - { id: spitter, count: 6, level: [17, 18] }
 
 - round: 22
+  consumables: { total: 5 }
   enemies:
     - { id: crawler, count: 9, level: [18, 19] }
     - { id: stalker, count: 9, level: [18, 19] }
@@ -171,6 +193,7 @@
     - { id: swarmer, count: 14, level: [18, 19] }
 
 - round: 23
+  consumables: { total: 5 }
   enemies:
     - { id: zombie, count: 9, level: [19, 20] }
     - { id: crawler, count: 9, level: [19, 20] }
@@ -180,6 +203,7 @@
     - { id: stalker, count: 8, level: [19, 20] }
 
 - round: 24
+  consumables: { total: 5 }
   enemies:
     - { id: crawler, count: 10, level: [20, 21] }
     - { id: stalker, count: 10, level: [20, 21] }
@@ -190,6 +214,7 @@
 
 - round: 25
   isBossRound: true
+  consumables: { total: 5 }
   enemies:
     - { id: boss_colossus, count: 1, level: [21, 23] }
     - { id: boss_hivemind, count: 1, level: [21, 23] }

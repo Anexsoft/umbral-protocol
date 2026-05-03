@@ -4,9 +4,9 @@ zombie:
   attack_id: "melee"
   attack_range: 42
   base_stats:
-    vit: 70
+    vit: 34
     attack: 4
-    speed: 150
+    speed: 126
     defense: 0.02
     rewards: [2, 5]
     score: [12, 28]
@@ -19,14 +19,14 @@ crawler:
   attack_id: "melee"
   attack_range: 34
   base_stats:
-    vit: 42
+    vit: 24
     attack: 6
-    speed: 190
+    speed: 162
     defense: 0.00
     rewards: [5, 12]
     score: [35, 65]
     xp: [14, 22]
-    scale: 1
+    scale: 1.3
 
 stalker:
   name: "Vector Stalker"
@@ -34,14 +34,14 @@ stalker:
   attack_id: "melee"
   attack_range: 38
   base_stats:
-    vit: 34
+    vit: 21
     attack: 7
-    speed: 245
+    speed: 206
     defense: 0.00
     rewards: [6, 14]
     score: [45, 85]
     xp: [18, 30]
-    scale: 0.95
+    scale: 1.1
 
 brute:
   name: "Bulk Enforcer"
@@ -49,9 +49,9 @@ brute:
   attack_id: "melee"
   attack_range: 52
   base_stats:
-    vit: 190
+    vit: 118
     attack: 16
-    speed: 90
+    speed: 82
     defense: 0.12
     rewards: [14, 26]
     score: [120, 220]
@@ -64,9 +64,9 @@ swarmer:
   attack_id: "melee"
   attack_range: 28
   base_stats:
-    vit: 16
+    vit: 10
     attack: 2
-    speed: 270
+    speed: 228
     defense: 0.00
     rewards: [1, 4]
     score: [6, 14]
@@ -79,9 +79,9 @@ spitter:
   attack_id: "range"
   attack_range: 280
   base_stats:
-    vit: 62
+    vit: 34
     attack: 8
-    speed: 160
+    speed: 142
     defense: 0.03
     rewards: [9, 16]
     score: [70, 115]
@@ -94,9 +94,9 @@ phantom:
   attack_id: "melee"
   attack_range: 36
   base_stats:
-    vit: 55
+    vit: 30
     attack: 8
-    speed: 225
+    speed: 188
     defense: 0.04
     rewards: [11, 20]
     score: [95, 165]
@@ -110,9 +110,9 @@ boss_colossus:
   attack_id: "melee"
   attack_range: 66
   base_stats:
-    vit: 420
+    vit: 290
     attack: 12
-    speed: 88
+    speed: 82
     defense: 0.10
     rewards: [90, 150]
     score: [850, 1500]
@@ -126,9 +126,9 @@ boss_hivemind:
   attack_id: "range"
   attack_range: 340
   base_stats:
-    vit: 380
+    vit: 265
     attack: 13
-    speed: 102
+    speed: 94
     defense: 0.09
     rewards: [100, 170]
     score: [1100, 1800]

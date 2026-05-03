@@ -3,7 +3,7 @@ import * as Phaser from "phaser";
 import {
   enemyStatMultiplier,
   enemyVisualScale,
-} from "@data/enemy-level-scaling";
+} from "@data/enemies/enemy-level-scaling";
 import { getGameData } from "@data/game-data";
 import { getTheme, hexToNumber } from "@data/theme/theme";
 import type { EnemyAttackType } from "@data/enemies/types";
@@ -36,7 +36,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   private rolledXp = 0;
   private attackDamage = 0;
   private isBoss = false;
-  private attackid: EnemyAttackType = "melee";
+  private isDying = false;
+  private attackType: EnemyAttackType = "melee";
   private attackRange = 48;
   private rangedAttackCooldownMs = 0;
   private knockbackTimerMs = 0;
@@ -121,10 +122,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.setVelocity(this.knockbackVelocity.x, this.knockbackVelocity.y);
   }
 
-  takeDamage(amount: number): void {
+  takeDamage(amount: number, isCritical = false): void {
     const damage = Math.round(Math.max(1, amount * (1 - this.defense)));
     this.health = Math.max(0, this.health - damage);
-    this.showDamagePopup(damage);
+    this.showDamagePopup(damage, isCritical);
     this.applyDamageEffect();
     this.refreshHealthTint();
 
@@ -267,27 +268,49 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 
   private applyDamageEffect(): void {
+    if (!this.active || this.isDying) return;
+
+    const baseScaleX = this.scaleX;
+    const baseScaleY = this.scaleY;
+    this.setTint(hexToNumber(theme.semantic.text.primary)).setTintMode(
+      Phaser.TintModes.FILL,
+    );
+
     this.scene.tweens.add({
       targets: this,
-      alpha: 0.4,
-      duration: 100,
+      scaleX: baseScaleX * 1.06,
+      scaleY: baseScaleY * 1.06,
+      alpha: 0.96,
+      duration: 80,
       yoyo: true,
-      repeat: 1,
+      repeat: 0,
       onComplete: () => {
-        if (this.active) this.refreshHealthTint();
+        if (!this.active || this.isDying) return;
+
+        this.setScale(baseScaleX, baseScaleY);
+        this.refreshHealthTint();
       },
     });
   }
 
-  private showDamagePopup(amount: number): void {
-    const damageText = this.scene.add.text(this.x, this.y - 20, `-${amount}`, {
-      fontFamily: theme.typography.fonts.display,
-      fontSize: theme.typography.sizes.display_md,
-      fontStyle: theme.typography.weights.bold,
-      color: theme.semantic.fx.damage_popup_fill,
-      stroke: theme.semantic.fx.damage_popup_stroke,
-      strokeThickness: 3,
-    });
+  private showDamagePopup(amount: number, isCritical = false): void {
+    const damageText = this.scene.add.text(
+      this.x,
+      this.y - 20,
+      isCritical ? `-${amount}!` : `-${amount}`,
+      {
+        fontFamily: theme.typography.fonts.display,
+        fontSize: isCritical
+          ? theme.typography.sizes.display_lg
+          : theme.typography.sizes.display_md,
+        fontStyle: theme.typography.weights.bold,
+        color: isCritical
+          ? theme.semantic.text.warning
+          : theme.semantic.fx.damage_popup_fill,
+        stroke: theme.semantic.fx.damage_popup_stroke,
+        strokeThickness: 3,
+      },
+    );
     damageText.setOrigin(0.5);
 
     this.scene.tweens.add({
@@ -301,12 +324,31 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 
   private die(): void {
+    if (this.isDying) return;
+
+    this.isDying = true;
+    this.scene.tweens.killTweensOf(this);
     this.clearTint();
+    this.setVelocity(0, 0);
+    this.disableBody(true, false);
+
     this.scene.events.emit("enemy:defeated", {
       credits: this.rolledCredits,
       score: this.rolledScore,
       xp: this.rolledXp,
+      x: this.x,
+      y: this.y,
     });
-    this.destroy();
+
+    this.scene.tweens.add({
+      targets: this,
+      alpha: 0,
+      scaleX: this.scaleX * 0.88,
+      scaleY: this.scaleY * 0.88,
+      y: this.y - 12,
+      duration: 180,
+      ease: "Cubic.Out",
+      onComplete: () => this.destroy(),
+    });
   }
 }

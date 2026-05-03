@@ -46,6 +46,8 @@ fx:
   blow: "#ff9900"
   grenade: "#66ffcc"
   grenade_burst: "#ffcc33"
+  health_pack: "#00ff66"
+  stamina_stim: "#33aaff"
   enemy_tint_high: "#ff0202"
   enemy_tint_mid: "#ff2222"
   enemy_tint_low: "#aa3333"

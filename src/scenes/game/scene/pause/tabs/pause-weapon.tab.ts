@@ -73,7 +73,7 @@ function buildFireModeMetrics(
 }
 
 export function renderPauseWeaponTab(context: PauseTabRenderContext): void {
-  context.drawSection("SECTION_01: PRIMARY WEAPON", (container, width) => {
+  context.drawSection("PRIMARY WEAPON", (container, width) => {
     const columnGap = 36;
     const columnWidth = (width - columnGap * 2) / 3;
     const currentModeStats =
@@ -142,7 +142,7 @@ export function renderPauseWeaponTab(context: PauseTabRenderContext): void {
     );
   });
 
-  context.drawSection("SECTION_02: FIRE MODES", (container, width) => {
+  context.drawSection("FIRE MODES", (container, width) => {
     const columnGap = 36;
     const columnWidth = (width - columnGap * 2) / 3;
     let maxHeight = 0;
@@ -196,7 +196,7 @@ export function renderPauseWeaponTab(context: PauseTabRenderContext): void {
     return maxHeight;
   });
 
-  context.drawSection("SECTION_03: SECONDARY WEAPON", (container, width) => {
+  context.drawSection("SECONDARY WEAPON", (container, width) => {
     const columnGap = 36;
     const columnWidth = (width - columnGap * 2) / 3;
 

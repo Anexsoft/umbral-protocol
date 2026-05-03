@@ -33,7 +33,10 @@ export class PrimaryWeaponFireHandler {
     const stats = weapon.modes[weapon.currentMode];
     const now = time || weapon.scene.time.now;
     const fireIntervalMs =
-      stats.fire_rate * 1000 * Math.max(0.2, fireRateIntervalMultiplier ?? 1);
+      stats.fire_rate *
+      1000 *
+      weapon.getFireRateIntervalMultiplier() *
+      Math.max(0.2, fireRateIntervalMultiplier ?? 1);
 
     if (
       weapon.isReloading ||
@@ -45,6 +48,7 @@ export class PrimaryWeaponFireHandler {
 
     weapon.lastShotAt = now;
     weapon.ammo -= 1;
+    const shouldAutoReload = weapon.ammo === 0;
 
     const baseDamage = scaledBaseDamage ?? 1;
     const pointer = weapon.scene.input.activePointer;
@@ -78,6 +82,10 @@ export class PrimaryWeaponFireHandler {
       default:
         this.spawnBullet(weapon, x, y, angle, baseDamage);
         break;
+    }
+
+    if (shouldAutoReload) {
+      weapon.reload();
     }
 
     return true;
@@ -139,12 +147,14 @@ export class PrimaryWeaponFireHandler {
       graphics.destroy();
     }
 
+    const damageRoll = weapon.getCriticalDamageRoll(damage);
     const bullet = new Bullet(
       weapon.scene,
       x,
       y,
       angle,
-      damage,
+      damageRoll.damage,
+      damageRoll.isCritical,
       scaleFactor,
       knockback,
     );

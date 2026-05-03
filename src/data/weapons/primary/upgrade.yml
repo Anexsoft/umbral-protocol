@@ -1,0 +1,47 @@
+extended_magazine:
+  name: "Extended Magazine"
+  description: "Expands the Sentinel APD-3 magazine well to sustain longer engagements before reload."
+  max_level: 10
+  base_cost: 20
+  next_level_cost_multiplier: 1.28
+  ammo_bonus_per_level: 2
+
+reload_optimization:
+  name: "Reload Optimization"
+  description: "Refines chamber cycling and feed alignment to reduce reload time by a percentage each upgrade."
+  max_level: 10
+  base_cost: 20
+  next_level_cost_multiplier: 1.3
+  reload_time_reduction_ratio_per_level: 0.04
+
+fire_rate_optimization:
+  name: "Fire Rate Optimization"
+  description: "Tightens trigger cycling to shave a small percentage off the time between shots each upgrade."
+  max_level: 10
+  base_cost: 20
+  next_level_cost_multiplier: 1.3
+  fire_rate_reduction_ratio_per_level: 0.025
+
+critical_protocol:
+  name: "Critical Protocol"
+  description: "Unlocks ballistic critical hits for the primary weapon and increases critical chance with each upgrade."
+  max_level: 10
+  base_cost: 30
+  next_level_cost_multiplier: 1.32
+  unlocks_critical_on_level: 1
+  crit_chance_ratio_per_level: 0.02
+  crit_damage_multiplier: 1.5
+
+mode_improvement:
+  name: "Mode Improvement"
+  description: "Tunes each firing pattern around its core role: faster single fire, denser spread volleys, and heavier power shots."
+  max_level: 5
+  base_cost: 30
+  next_level_cost_multiplier: 1.34
+  single:
+    fire_rate_reduction_ratio_per_level: 0.05
+  spread:
+    bonus_pellets_every_levels: 2
+    spread_damage_multiplier_bonus_per_level: 0.05
+  power:
+    damage_multiplier_bonus_per_level: 0.05

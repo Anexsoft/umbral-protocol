@@ -23,6 +23,7 @@ import {
 } from "./pause.types";
 import { renderPauseSkillsTab } from "./tabs/pause-skills.tab";
 import { renderPauseSummaryTab } from "./tabs/pause-summary.tab";
+import { renderPauseUpgradesTab } from "./tabs/pause-upgrades.tab";
 import { renderPauseWeaponTab } from "./tabs/pause-weapon.tab";
 
 const theme = getTheme();
@@ -30,8 +31,9 @@ const PAUSE_LAYOUT_HEIGHT = 760;
 const PAUSE_CONTENT_Y = 196;
 const TAB_DEFINITIONS: PauseTabDefinition[] = [
   { id: PauseTab.Summary, label: "01_SUMMARY" },
-  { id: PauseTab.Skills, label: "02_NEURAL_SKILLS" },
-  { id: PauseTab.Weapon, label: "03_WEAPONRY" },
+  { id: PauseTab.Skills, label: "02_SKILLS" },
+  { id: PauseTab.Weapon, label: "03_WEAPONS" },
+  { id: PauseTab.Upgrades, label: "04_UPGRADES" },
 ];
 
 export class PauseScene extends Phaser.Scene {
@@ -61,6 +63,7 @@ export class PauseScene extends Phaser.Scene {
 
     this.player = data.player;
     this.bundle = getGameData();
+    this.tabButtons = [];
 
     this.scene.setVisible(false, SceneKey.Game);
     this.scene.setVisible(false, SceneKey.PlayerHud);
@@ -124,6 +127,7 @@ export class PauseScene extends Phaser.Scene {
     const selectSummary = () => this.switchTab(PauseTab.Summary);
     const selectSkills = () => this.switchTab(PauseTab.Skills);
     const selectWeapon = () => this.switchTab(PauseTab.Weapon);
+    const selectUpgrades = () => this.switchTab(PauseTab.Upgrades);
 
     this.input.keyboard!.on("keydown-ESC", resume);
     this.input.keyboard!.on("keydown-ESCAPE", resume);
@@ -131,8 +135,10 @@ export class PauseScene extends Phaser.Scene {
     this.input.keyboard!.on("keydown-ONE", selectSummary);
     this.input.keyboard!.on("keydown-TWO", selectSkills);
     this.input.keyboard!.on("keydown-THREE", selectWeapon);
+    this.input.keyboard!.on("keydown-FOUR", selectUpgrades);
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.tabButtons = [];
       this.scene.setVisible(true, SceneKey.Game);
       this.scene.setVisible(true, SceneKey.PlayerHud);
       this.input.keyboard?.off("keydown-ESC", resume);
@@ -141,13 +147,14 @@ export class PauseScene extends Phaser.Scene {
       this.input.keyboard?.off("keydown-ONE", selectSummary);
       this.input.keyboard?.off("keydown-TWO", selectSkills);
       this.input.keyboard?.off("keydown-THREE", selectWeapon);
+      this.input.keyboard?.off("keydown-FOUR", selectUpgrades);
     });
   }
 
   private createHeader(): void {
     const marginX = this.getMarginX();
     const currentRound = Number(this.game.registry.get("match:round") ?? 1);
-    const title = this.add.text(marginX, 34, "OPERATOR PAUSE", {
+    const title = this.add.text(marginX, 34, "OPERATOR", {
       fontFamily: theme.typography.fonts.mono,
       fontSize: theme.typography.sizes.display_xl,
       fontStyle: theme.typography.weights.bold,
@@ -165,7 +172,7 @@ export class PauseScene extends Phaser.Scene {
       },
     );
     const controls = this.add
-      .text(this.scale.width - marginX, 82, "TAB / 1 / 2 / 3 TO NAVIGATE", {
+      .text(this.scale.width - marginX, 82, "TAB / 1 / 2 / 3 / 4 TO NAVIGATE", {
         fontFamily: theme.typography.fonts.mono,
         fontSize: theme.typography.sizes.sm,
         color: theme.semantic.text.soft,
@@ -226,6 +233,7 @@ export class PauseScene extends Phaser.Scene {
       player: this.player,
       bundle: this.bundle,
       contentWidth: this.getContentWidth(),
+      refreshTab: () => this.switchTab(this.activeTab),
       drawSection: this.drawSection.bind(this),
       getModeColor: this.getModeColor.bind(this),
       getSkillStatus: this.getSkillStatus.bind(this),
@@ -239,6 +247,9 @@ export class PauseScene extends Phaser.Scene {
       case PauseTab.Weapon:
         renderPauseWeaponTab(context);
         break;
+      case PauseTab.Upgrades:
+        renderPauseUpgradesTab(context);
+        break;
       default:
         renderPauseSummaryTab(context);
         break;
@@ -246,6 +257,14 @@ export class PauseScene extends Phaser.Scene {
   }
 
   private updateTabVisuals(): void {
+    this.tabButtons = this.tabButtons.filter(
+      (button) =>
+        Boolean(button.background.scene) &&
+        Boolean(button.label.scene) &&
+        button.background.active &&
+        button.label.active,
+    );
+
     this.tabButtons.forEach((button) => {
       const isActive = button.tab === this.activeTab;
       button.background
@@ -277,6 +296,8 @@ export class PauseScene extends Phaser.Scene {
       title: options.title,
       subtitle: options.subtitle,
       description: options.description,
+      headerRightText: options.headerRightText,
+      headerRightColor: options.headerRightColor,
       y: this.contentCursorY,
       children,
     });

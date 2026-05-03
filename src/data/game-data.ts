@@ -1,5 +1,13 @@
 import enemiesYaml from "@data/enemies/enemies.yml?raw";
 import enemyScalingYaml from "@data/enemies/enemy-scaling.yml?raw";
+import healthPackYaml from "@data/consumables/health-pack.yml?raw";
+import staminaStimYaml from "@data/consumables/stamina-stim.yml?raw";
+import type {
+  HealthConsumableYaml,
+  HealthConsumableYamlEntry,
+  StaminaConsumableYaml,
+  StaminaConsumableYamlEntry,
+} from "@data/consumables/types";
 import type {
   EnemyLevelScalingConfig,
   EnemyYamlEntry,
@@ -19,17 +27,26 @@ import type {
   PlayerYamlRoot,
 } from "@data/player/types";
 import roundsYaml from "@data/rounds/rounds.yml?raw";
-import type { RoundSpawnEntry } from "@data/rounds/types";
+import type {
+  RoundConsumableConfig,
+  RoundSpawnEntry,
+} from "@data/rounds/types";
 import type { GameDataBundle } from "@data/types";
 import primaryYaml from "@data/weapons/primary/primary.yml?raw";
 import primaryModesYaml from "@data/weapons/primary/primary-modes.yml?raw";
+import primaryUpgradeYaml from "@data/weapons/primary/upgrade.yml?raw";
 import type {
   PrimaryWeaponCoreYaml,
   PrimaryWeaponModeYaml,
+  PrimaryWeaponUpgradeYaml,
   PrimaryWeaponYaml,
 } from "@data/weapons/primary/types";
 import secondaryYaml from "@data/weapons/secondary/secondary.yml?raw";
-import type { SecondaryWeaponYaml } from "@data/weapons/secondary/types";
+import secondaryUpgradeYaml from "@data/weapons/secondary/upgrade.yml?raw";
+import type {
+  SecondaryWeaponUpgradeYaml,
+  SecondaryWeaponYaml,
+} from "@data/weapons/secondary/types";
 
 import yaml from "js-yaml";
 
@@ -177,19 +194,13 @@ function parsePlayer(
     damage: raw.damage,
     stamina: raw.stamina,
     speed: raw.speed,
+    scale: raw.scale,
     score: raw.score,
     credits: raw.credits,
     xp: raw.xp,
   };
   if (baseValues.credits === undefined) baseValues.credits = 0;
   if (baseValues.score === undefined) baseValues.score = 0;
-
-  const levelGrowth = {
-    hp_per_level: raw.hp_per_level,
-    damage_per_level: raw.damage_per_level,
-    stamina_per_level: raw.stamina_per_level,
-    speed_per_level: raw.speed_per_level,
-  };
 
   return {
     name: raw.name,
@@ -216,11 +227,78 @@ function parsePlayer(
 function parsePrimaryWeapon(
   core: PrimaryWeaponCoreYaml,
   modesRaw: unknown,
+  upgradesRaw: unknown,
 ): PrimaryWeaponYaml {
   const modes = (modesRaw as Record<string, PrimaryWeaponModeYaml>) ?? {};
+  const upgrades = (upgradesRaw as PrimaryWeaponUpgradeYaml) ?? {
+    extended_magazine: {
+      name: "Extended Magazine",
+      max_level: 0,
+      base_cost: 0,
+      next_level_cost_multiplier: 1,
+      ammo_bonus_per_level: 0,
+    },
+    reload_optimization: {
+      name: "Reload Optimization",
+      max_level: 0,
+      base_cost: 0,
+      next_level_cost_multiplier: 1,
+      reload_time_reduction_ratio_per_level: 0,
+    },
+    fire_rate_optimization: {
+      name: "Fire Rate Optimization",
+      max_level: 0,
+      base_cost: 0,
+      next_level_cost_multiplier: 1,
+      fire_rate_reduction_ratio_per_level: 0,
+    },
+    critical_protocol: {
+      name: "Critical Protocol",
+      max_level: 0,
+      base_cost: 0,
+      next_level_cost_multiplier: 1,
+      unlocks_critical_on_level: 1,
+      crit_chance_ratio_per_level: 0,
+      crit_damage_multiplier: 1,
+    },
+    mode_improvement: {
+      name: "Mode Improvement",
+      max_level: 0,
+      base_cost: 0,
+      next_level_cost_multiplier: 1,
+      single: { fire_rate_reduction_ratio_per_level: 0 },
+      spread: {
+        bonus_pellets_every_levels: 1,
+        spread_damage_multiplier_bonus_per_level: 0,
+      },
+      power: { damage_multiplier_bonus_per_level: 0 },
+    },
+  };
   return {
     ...core,
     modes,
+    upgrades,
+  };
+}
+
+function parseSecondaryWeapon(
+  raw: SecondaryWeaponYaml,
+  upgradesRaw: unknown,
+): SecondaryWeaponYaml {
+  const upgrades = (upgradesRaw as SecondaryWeaponUpgradeYaml) ?? {
+    knife_enhancement: {
+      name: "Knife Enhancement",
+      max_level: 0,
+      base_cost: 0,
+      next_level_cost_multiplier: 1,
+      damage_bonus_ratio_per_level: 0,
+      attack_radius_bonus_per_level: 0,
+    },
+  };
+
+  return {
+    ...raw,
+    upgrades,
   };
 }
 
@@ -243,6 +321,24 @@ function parseEnemies(raw: unknown): EnemyYamlEntry[] {
             : 48,
       };
     });
+}
+
+function parseKeyedEntries<T extends object>(raw: unknown): Record<string, T> {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+
+  return Object.fromEntries(
+    Object.entries(raw).filter(([id, entry]) => {
+      return !!id.trim() && typeof entry === "object" && entry !== null;
+    }),
+  ) as Record<string, T>;
+}
+
+function parseHealthPacks(raw: unknown): HealthConsumableYaml {
+  return parseKeyedEntries<HealthConsumableYamlEntry>(raw);
+}
+
+function parseStaminaStims(raw: unknown): StaminaConsumableYaml {
+  return parseKeyedEntries<StaminaConsumableYamlEntry>(raw);
 }
 
 function parseRoundWaves(raw: unknown): RoundSpawnEntry[][] {
@@ -340,15 +436,41 @@ function parseRoundWaves(raw: unknown): RoundSpawnEntry[][] {
   return waves;
 }
 
+function parseRoundConsumables(raw: unknown): RoundConsumableConfig[] {
+  if (!raw || !Array.isArray(raw)) return [];
+
+  return raw.map((wave) => {
+    if (typeof wave !== "object" || wave === null || Array.isArray(wave)) {
+      return { total: 0 };
+    }
+
+    const roundEntry = wave as {
+      consumables?: {
+        total?: number;
+      };
+    };
+
+    return {
+      total: Math.max(0, Math.floor(roundEntry.consumables?.total ?? 0)),
+    };
+  });
+}
+
 function buildBundle(): GameDataBundle {
   if (!playerYaml) throw new Error("player.yml missing");
   if (!playerLevelCurveYaml) throw new Error("player level curve yml missing");
   if (!playerLevelGrowthYaml)
     throw new Error("player level growth yml missing");
   if (!playerSkillsYaml) throw new Error("player skills yml missing");
+  if (!healthPackYaml) throw new Error("player health pack yml missing");
+  if (!staminaStimYaml) throw new Error("player stamina stim yml missing");
   if (!primaryYaml) throw new Error("primary weapon yml missing");
   if (!primaryModesYaml) throw new Error("primary weapon modes yml missing");
+  if (!primaryUpgradeYaml)
+    throw new Error("primary weapon upgrade yml missing");
   if (!secondaryYaml) throw new Error("secondary weapon yml missing");
+  if (!secondaryUpgradeYaml)
+    throw new Error("secondary weapon upgrade yml missing");
   if (!enemiesYaml) throw new Error("enemies.yml missing");
   if (!enemyScalingYaml) throw new Error("enemy-scaling.yml missing");
   if (!roundsYaml) throw new Error("rounds.yml missing");
@@ -363,15 +485,23 @@ function buildBundle(): GameDataBundle {
   const playerSkills = yaml.load(playerSkillsYaml) as Array<
     PlayerSkillDashYaml | PlayerSkillBlowYaml | PlayerSkillBurstYaml
   >;
+  const healthPacks = parseHealthPacks(yaml.load(healthPackYaml));
+  const staminaStims = parseStaminaStims(yaml.load(staminaStimYaml));
   const primaryWeaponCore = yaml.load(primaryYaml) as PrimaryWeaponCoreYaml;
   const primaryWeapon = parsePrimaryWeapon(
     primaryWeaponCore,
     yaml.load(primaryModesYaml),
+    yaml.load(primaryUpgradeYaml),
   );
-  const secondaryWeapon = yaml.load(secondaryYaml) as SecondaryWeaponYaml;
+  const secondaryWeapon = parseSecondaryWeapon(
+    yaml.load(secondaryYaml) as SecondaryWeaponYaml,
+    yaml.load(secondaryUpgradeYaml),
+  );
   const enemies = parseEnemies(yaml.load(enemiesYaml));
   const enemyLevelScaling = parseEnemyLevelScaling(yaml.load(enemyScalingYaml));
-  const roundWaves = parseRoundWaves(yaml.load(roundsYaml));
+  const roundsRaw = yaml.load(roundsYaml);
+  const roundWaves = parseRoundWaves(roundsRaw);
+  const roundConsumables = parseRoundConsumables(roundsRaw);
   const enemyById = new Map<string, EnemyYamlEntry>();
 
   for (const enemy of enemies) {
@@ -385,12 +515,15 @@ function buildBundle(): GameDataBundle {
       playerLevelCurve,
       playerSkills,
     ),
+    healthPacks,
+    staminaStims,
     primaryWeapon,
     secondaryWeapon,
     enemies,
     enemyById,
     enemyLevelScaling,
     roundWaves,
+    roundConsumables,
   };
 }
 

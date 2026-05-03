@@ -17,6 +17,8 @@ export interface PauseBlockComponentOptions {
   title: string;
   subtitle?: string;
   description?: string;
+  headerRightText?: string;
+  headerRightColor?: string;
   y: number;
   x?: number;
   width?: number;
@@ -46,6 +48,21 @@ export function createPauseBlockComponent(
     color: theme.semantic.text.primary,
     letterSpacing: theme.typography.letter_spacing.wide / 2,
   });
+  const headerRight = options.headerRightText
+    ? scene.add
+        .text(
+          blockWidth - PADDING_X,
+          HEADER_TOP_PADDING + 1,
+          options.headerRightText,
+          {
+            fontFamily: theme.typography.fonts.mono,
+            fontSize: theme.typography.sizes.md,
+            fontStyle: theme.typography.weights.bold,
+            color: options.headerRightColor ?? theme.semantic.text.accent_scan,
+          },
+        )
+        .setOrigin(1, 0)
+    : null;
   const subtitle = subtitleText
     ? scene.add.text(
         PADDING_X,
@@ -122,6 +139,10 @@ export function createPauseBlockComponent(
 
   if (subtitle) {
     headerChildren.splice(headerChildren.length - 1, 0, subtitle);
+  }
+
+  if (headerRight) {
+    headerChildren.splice(headerChildren.length - 1, 0, headerRight);
   }
 
   root.add(headerChildren);

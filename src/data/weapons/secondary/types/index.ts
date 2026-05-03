@@ -1,1 +1,5 @@
-export type { SecondaryWeaponYaml } from "./secondary-weapon-yaml.type";
+export type {
+  SecondaryWeaponKnifeEnhancementUpgradeYaml,
+  SecondaryWeaponUpgradeYaml,
+  SecondaryWeaponYaml,
+} from "./secondary-weapon-yaml.type";

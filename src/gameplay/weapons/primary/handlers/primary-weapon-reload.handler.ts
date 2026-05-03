@@ -18,11 +18,9 @@ export class PrimaryWeaponReloadHandler {
     weapon: PrimaryWeapon,
     durationMultiplier?: number,
   ): void {
-    const stats = weapon.modes[weapon.currentMode];
     if (weapon.isReloading || weapon.ammo === weapon.maxAmmo) return;
     weapon.isReloading = true;
-    weapon.reloadDurationMs =
-      stats.reload_time * 1000 * Math.max(0.2, durationMultiplier ?? 1);
+    weapon.reloadDurationMs = weapon.getReloadDurationMs(durationMultiplier);
     weapon.reloadTimerMs = weapon.reloadDurationMs;
   }
 

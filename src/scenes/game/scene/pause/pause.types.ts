@@ -10,6 +10,7 @@ export enum PauseTab {
   Summary = 0,
   Skills = 1,
   Weapon = 2,
+  Upgrades = 3,
 }
 
 export interface PauseTabDefinition {
@@ -26,6 +27,8 @@ export interface PauseSectionOptions {
   title: string;
   subtitle?: string;
   description?: string;
+  headerRightText?: string;
+  headerRightColor?: string;
 }
 
 export interface PauseTabRenderContext {
@@ -34,6 +37,7 @@ export interface PauseTabRenderContext {
   player: Player;
   bundle: GameDataBundle;
   contentWidth: number;
+  refreshTab: () => void;
   drawSection: (
     section: string | PauseSectionOptions,
     children: PauseBlockChildren,

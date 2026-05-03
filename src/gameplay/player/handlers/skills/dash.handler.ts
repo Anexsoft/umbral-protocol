@@ -48,8 +48,26 @@ export class DashHandler {
     player.dashActive = true;
     player.dashTimerMs = DASH_DURATION_MS;
 
-    const angle = player.rotation;
-    player.dashDirection.set(Math.cos(angle), Math.sin(angle));
+    const dashDirection = new Phaser.Math.Vector2(0, 0);
+    if (input.left?.isDown) dashDirection.x -= 1;
+    if (input.right?.isDown) dashDirection.x += 1;
+    if (input.up?.isDown) dashDirection.y -= 1;
+    if (input.down?.isDown) dashDirection.y += 1;
+
+    if (dashDirection.lengthSq() === 0) {
+      dashDirection.set(
+        player.body?.velocity.x ?? 0,
+        player.body?.velocity.y ?? 0,
+      );
+    }
+
+    if (dashDirection.lengthSq() === 0) {
+      player.dashActive = false;
+      return;
+    }
+
+    dashDirection.normalize();
+    player.dashDirection.copy(dashDirection);
     this.spawnTrailFx(player);
   }
 

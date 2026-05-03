@@ -1,5 +1,15 @@
 export type {
   PrimaryWeaponCoreYaml,
+  PrimaryWeaponCriticalProtocolUpgradeYaml,
+  PrimaryWeaponExtendedMagazineUpgradeYaml,
+  PrimaryWeaponFireRateOptimizationUpgradeYaml,
+  PrimaryWeaponModeImprovementPowerUpgradeYaml,
+  PrimaryWeaponModeImprovementSingleUpgradeYaml,
+  PrimaryWeaponModeImprovementSpreadUpgradeYaml,
+  PrimaryWeaponModeImprovementUpgradeYaml,
   PrimaryWeaponModeYaml,
+  PrimaryWeaponReloadOptimizationUpgradeYaml,
+  PrimaryWeaponUpgradeProgressionYaml,
+  PrimaryWeaponUpgradeYaml,
   PrimaryWeaponYaml,
 } from "./primary-weapon-yaml.type";

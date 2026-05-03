@@ -1,0 +1,24 @@
+stamina_stim_1:
+  name: "Stamina Stim"
+  restore_ratio: 0.05
+  scale: 0.9
+
+stamina_stim_2:
+  name: "Stamina Stim"
+  restore_ratio: 0.15
+  scale: 0.95
+
+stamina_stim_3:
+  name: "Stamina Stim"
+  restore_ratio: 0.3
+  scale: 1
+
+stamina_stim_4:
+  name: "Stamina Stim"
+  restore_ratio: 0.5
+  scale: 1.05
+
+stamina_stim_5:
+  name: "Stamina Stim"
+  restore_ratio: 1.0
+  scale: 1.1

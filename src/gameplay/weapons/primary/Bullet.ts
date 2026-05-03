@@ -5,6 +5,7 @@ const BULLET_BASE_SCALE = 1.5;
 
 export class Bullet extends Phaser.Physics.Arcade.Image {
   readonly angle: number;
+  readonly isCritical: boolean;
   private readonly speed: number;
   private readonly damageAmount: number;
   readonly knockback: number;
@@ -15,12 +16,14 @@ export class Bullet extends Phaser.Physics.Arcade.Image {
     y: number,
     angle: number,
     damage: number,
+    isCritical: boolean,
     scaleFactor: number,
     knockback = 0,
   ) {
     super(scene, x, y, "bullet-circle");
 
     this.angle = angle;
+    this.isCritical = isCritical;
     this.speed = BULLET_SPEED;
     this.damageAmount = damage;
     this.knockback = knockback;
