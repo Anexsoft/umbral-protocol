@@ -1,136 +1,136 @@
 zombie:
   name: "Infected Shambler"
   description: "A slow-moving undead creature that attacks by biting."
-  attack_id: "melee"
+  type: "melee"
+  attack_cooldown: 1.2
   attack_range: 42
   base_stats:
-    vit: 34
-    attack: 4
+    hp: 34
+    damage: 4
     speed: 126
     defense: 0.02
     rewards: [2, 5]
-    score: [12, 28]
-    xp: [8, 14]
+    xp: [12, 28]
     scale: 1.5
 
 crawler:
   name: "Acid Crawler"
   description: "Fast low-profile bio-hazard."
-  attack_id: "melee"
+  type: "melee"
+  attack_cooldown: 0.95
   attack_range: 34
   base_stats:
-    vit: 24
-    attack: 6
+    hp: 24
+    damage: 6
     speed: 162
     defense: 0.00
     rewards: [5, 12]
-    score: [35, 65]
-    xp: [14, 22]
+    xp: [35, 65]
     scale: 1.3
 
 stalker:
   name: "Vector Stalker"
   description: "Flanking predator—fragile but relentless."
-  attack_id: "melee"
+  type: "melee"
+  attack_cooldown: 0.9
   attack_range: 38
   base_stats:
-    vit: 21
-    attack: 7
+    hp: 21
+    damage: 7
     speed: 206
     defense: 0.00
     rewards: [6, 14]
-    score: [45, 85]
-    xp: [18, 30]
+    xp: [45, 85]
     scale: 1.1
 
 brute:
   name: "Bulk Enforcer"
   description: "Heavy armor plating; hits like a freight train."
-  attack_id: "melee"
+  type: "melee"
+  attack_cooldown: 1.8
   attack_range: 52
   base_stats:
-    vit: 118
-    attack: 16
+    hp: 118
+    damage: 16
     speed: 82
     defense: 0.12
     rewards: [14, 26]
-    score: [120, 220]
-    xp: [45, 72]
+    xp: [120, 220]
     scale: 2.1
 
 swarmer:
   name: "Swarm Drone"
   description: "Tiny swarm unit—dies fast, arrives in numbers."
-  attack_id: "melee"
+  type: "melee"
+  attack_cooldown: 0.82
   attack_range: 28
   base_stats:
-    vit: 10
-    attack: 2
+    hp: 10
+    damage: 2
     speed: 228
     defense: 0.00
     rewards: [1, 4]
-    score: [6, 14]
-    xp: [3, 6]
+    xp: [6, 14]
     scale: 0.65
 
 spitter:
   name: "Corrosive Spitter"
   description: "Medium threat; acidic residue weakens armor."
-  attack_id: "range"
+  type: "range"
+  attack_cooldown: 1.55
   attack_range: 280
   base_stats:
-    vit: 34
-    attack: 8
+    hp: 34
+    damage: 8
     speed: 142
     defense: 0.03
     rewards: [9, 16]
-    score: [70, 115]
-    xp: [25, 35]
+    xp: [70, 115]
     scale: 1.2
 
 phantom:
   name: "Phase Wraith"
   description: "Erratic movement pattern; harder to track."
-  attack_id: "melee"
+  type: "melee"
+  attack_cooldown: 1.05
   attack_range: 36
   base_stats:
-    vit: 30
-    attack: 8
+    hp: 30
+    damage: 8
     speed: 188
     defense: 0.04
     rewards: [11, 20]
-    score: [95, 165]
-    xp: [32, 48]
+    xp: [95, 165]
     scale: 1.1
 
 boss_colossus:
   name: "Colossus UNIT-09"
   description: "Containment breach primary—massive kinetic threat."
   boss: true
-  attack_id: "melee"
+  type: "melee"
+  attack_cooldown: 2.1
   attack_range: 66
   base_stats:
-    vit: 290
-    attack: 12
+    hp: 290
+    damage: 12
     speed: 82
     defense: 0.10
     rewards: [90, 150]
-    score: [850, 1500]
-    xp: [280, 420]
+    xp: [850, 1500]
     scale: 2.9
 
 boss_hivemind:
   name: "Hivemind CORE"
   description: "Neural cluster boss—summons pressure until destroyed."
   boss: true
-  attack_id: "range"
+  type: "range"
+  attack_cooldown: 1.9
   attack_range: 340
   base_stats:
-    vit: 265
-    attack: 13
+    hp: 265
+    damage: 13
     speed: 94
     defense: 0.09
     rewards: [100, 170]
-    score: [1100, 1800]
-    xp: [360, 520]
+    xp: [1100, 1800]
     scale: 2.5

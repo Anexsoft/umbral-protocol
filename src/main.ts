@@ -9,6 +9,18 @@ import "./style.css";
 
 ensureGameDataLoaded();
 
+function readEnvBoolean(value: string | undefined, fallback: boolean): boolean {
+  if (value === undefined || value.trim() === "") return fallback;
+
+  const normalized = value.trim().toLowerCase();
+  if (normalized === "true") return true;
+  if (normalized === "false") return false;
+
+  return fallback;
+}
+
+const isDebugMode = readEnvBoolean(import.meta.env.VITE_GAME_DEBUG, false);
+
 const theme = getTheme();
 
 const gameConfig: Phaser.Types.Core.GameConfig = {
@@ -19,6 +31,7 @@ const gameConfig: Phaser.Types.Core.GameConfig = {
     default: "arcade",
     arcade: {
       gravity: { x: 0, y: 0 },
+      debug: isDebugMode,
     },
   },
   scale: {

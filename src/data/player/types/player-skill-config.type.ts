@@ -5,9 +5,15 @@ export interface PlayerSkillConfig {
   cooldownSec: number;
   staminaCost: number;
   durationSec?: number;
+  durationSecMaxLevel?: number;
   damageMultiplier?: number;
+  distanceBonusRatioMaxLevel?: number;
   moveSpeedBonusRatio?: number;
+  moveSpeedBonusRatioMaxLevel?: number;
   fireRateBonusRatio?: number;
+  fireRateBonusRatioMaxLevel?: number;
   reloadSpeedBonusRatio?: number;
+  reloadSpeedBonusRatioMaxLevel?: number;
   radiusMax?: number;
+  radiusBonusRatioMaxLevel?: number;
 }

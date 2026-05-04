@@ -5,5 +5,6 @@ export interface PlayerSkillBlowYaml {
   cooldown: number;
   stamina_cost: number;
   damage_multiplier: number;
-  radius_max: number;
+  radius: number;
+  radius_bonus_ratio_max_level?: number;
 }

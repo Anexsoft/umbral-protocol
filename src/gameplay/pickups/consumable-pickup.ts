@@ -1,5 +1,7 @@
 import * as Phaser from "phaser";
 
+import { BASE_UNIT_PX } from "@config/constants";
+
 import { getTheme, hexToNumber } from "@data/theme/theme";
 
 const theme = getTheme();
@@ -37,10 +39,11 @@ export class ConsumablePickup extends Phaser.GameObjects.Container {
     this.bobBaseY = y;
 
     const color = this.getTintColor();
-    const visualScale = Math.max(0.9, scale);
-    const glowRadius = Math.round(18 * visualScale);
-    const ringRadius = Math.round(12 * visualScale);
-    const coreRadius = Math.round(8 * visualScale);
+    const visualScale = Math.max(0.25, scale);
+    const sizePx = BASE_UNIT_PX * visualScale;
+    const glowRadius = Math.round(sizePx * 0.5);
+    const ringRadius = Math.round(sizePx * 0.34);
+    const coreRadius = Math.round(sizePx * 0.22);
 
     this.glow = scene.add
       .circle(0, 0, glowRadius, color, 0.18)
@@ -55,7 +58,10 @@ export class ConsumablePickup extends Phaser.GameObjects.Container {
     scene.physics.add.existing(this);
 
     const body = this.body as Phaser.Physics.Arcade.Body;
-    const bodyRadius = Math.max(ringRadius, coreRadius + 4);
+    const bodyRadius = Math.max(
+      ringRadius,
+      coreRadius + Math.round(sizePx * 0.06),
+    );
     body.setAllowGravity(false);
     body.setImmovable(true);
     body.pushable = false;

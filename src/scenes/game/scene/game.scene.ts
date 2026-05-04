@@ -1,6 +1,10 @@
 import * as Phaser from "phaser";
 
-import { GRID_SIZE, WORLD_HEIGHT, WORLD_WIDTH } from "@config/constants";
+import {
+  DEBUG_GRID_SIZE_PX,
+  WORLD_HEIGHT,
+  WORLD_WIDTH,
+} from "@config/constants";
 
 import { SceneKey } from "@core/scene-key";
 
@@ -8,7 +12,7 @@ import { getGameData } from "@data/game-data";
 import { getTheme, hexToNumber } from "@data/theme/theme";
 import type { RoundSpawnEntry } from "@data/rounds/types";
 
-import { Enemy } from "@gameplay/enemies/enemy";
+import { Enemy } from "@gameplay/enemies/Enemy";
 import { CreditPickup } from "@gameplay/pickups/credit-pickup";
 import {
   ConsumablePickup,
@@ -28,7 +32,6 @@ const SKILL_BLOW = "skill:blow";
 const ENEMY_DEFEATED = "enemy:defeated";
 
 const ROUND_INTRO_MS = 2200;
-const BETWEEN_WAVE_SECONDS = 15;
 const OVERLAY_DEPTH = 14000;
 const PICKUP_MAGNET_RADIUS = 140;
 const ROUND_END_CREDIT_PULL_RADIUS = 99999;
@@ -72,9 +75,8 @@ export class GameScene extends Phaser.Scene {
   private roundConsumableCount = 0;
   private roundUiBlocking = false;
   private awaitingRoundCreditCleanup = false;
-  private intermissionTimer?: Phaser.Time.TimerEvent;
   private intermissionCleanup?: () => void;
-  private skipEnterHandler?: () => void;
+  private intermissionContinueHandler?: () => void;
 
   constructor() {
     super(SceneKey.Game);
@@ -129,6 +131,7 @@ export class GameScene extends Phaser.Scene {
         if (this.playerContactCooldownMs > 0) return;
 
         this.player.applyDamage(enemy.contactDamage);
+        enemy.startAttackCooldown();
         this.playerContactCooldownMs = PLAYER_CONTACT_INVULN_MS;
       },
     );
@@ -210,8 +213,15 @@ export class GameScene extends Phaser.Scene {
   }
 
   private beginMatchFlow(): void {
-    this.waveIndex = 0;
-    this.showRoundIntroBanner(1, () => {
+    const configuredRound = getGameData().gameSettings.startRound;
+    const startRound = Phaser.Math.Clamp(
+      configuredRound,
+      1,
+      Math.max(1, this.waves.length),
+    );
+
+    this.waveIndex = startRound - 1;
+    this.showRoundIntroBanner(startRound, () => {
       this.spawnWave(this.waveIndex);
       this.roundUiBlocking = false;
       this.physics.resume();
@@ -257,15 +267,14 @@ export class GameScene extends Phaser.Scene {
 
   private onEnemyDefeated(payload?: {
     credits: number;
-    score: number;
     xp: number;
     x: number;
     y: number;
   }): void {
     if (!this.player?.isAlive || this.roundUiBlocking) return;
 
-    const p = payload ?? { credits: 0, score: 0, xp: 0, x: 0, y: 0 };
-    this.player.addKillRewards(0, p.score, p.xp);
+    const p = payload ?? { credits: 0, xp: 0, x: 0, y: 0 };
+    this.player.addKillRewards(0, p.xp);
     this.roundDefeatCount += 1;
 
     if (p.credits > 0) {
@@ -304,13 +313,9 @@ export class GameScene extends Phaser.Scene {
   }
 
   private clearIntermissionTimer(): void {
-    if (this.intermissionTimer) {
-      this.intermissionTimer.destroy();
-      this.intermissionTimer = undefined;
-    }
-    if (this.skipEnterHandler) {
-      this.input.keyboard?.off("keydown-ENTER", this.skipEnterHandler);
-      this.skipEnterHandler = undefined;
+    if (this.intermissionContinueHandler) {
+      this.input.off("pointerdown", this.intermissionContinueHandler);
+      this.intermissionContinueHandler = undefined;
     }
     if (this.intermissionCleanup) {
       this.intermissionCleanup();
@@ -327,7 +332,6 @@ export class GameScene extends Phaser.Scene {
     const controls = this.intermissionOverlay.show({
       scene: this,
       depth: OVERLAY_DEPTH,
-      secondsRemaining: BETWEEN_WAVE_SECONDS,
       onProceed: () => {
         this.clearIntermissionTimer();
         this.waveIndex += 1;
@@ -343,9 +347,8 @@ export class GameScene extends Phaser.Scene {
     if (!controls) return;
 
     this.intermissionCleanup = controls.cleanup;
-    this.intermissionTimer = controls.timer;
-    this.skipEnterHandler = controls.skipHandler;
-    this.input.keyboard!.once("keydown-ENTER", this.skipEnterHandler);
+    this.intermissionContinueHandler = controls.continueHandler;
+    this.input.once("pointerdown", this.intermissionContinueHandler);
   }
 
   private showVictoryOverlay(): void {
@@ -373,7 +376,13 @@ export class GameScene extends Phaser.Scene {
   private spawnCreditPickup(x: number, y: number, credits: number): void {
     const spawnX = x + Phaser.Math.Between(-8, 8);
     const spawnY = y + Phaser.Math.Between(-6, 6);
-    const pickup = new CreditPickup(this, spawnX, spawnY, credits);
+    const pickup = new CreditPickup(
+      this,
+      spawnX,
+      spawnY,
+      credits,
+      getGameData().creditPickup.scale,
+    );
     this.creditPickups.add(pickup);
   }
 
@@ -589,11 +598,11 @@ export class GameScene extends Phaser.Scene {
     const grid = this.add.graphics();
     grid.lineStyle(1, hexToNumber(theme.semantic.gfx.grid), 1);
 
-    for (let x = 0; x <= WORLD_WIDTH; x += GRID_SIZE) {
+    for (let x = 0; x <= WORLD_WIDTH; x += DEBUG_GRID_SIZE_PX) {
       grid.lineBetween(x, 0, x, WORLD_HEIGHT);
     }
 
-    for (let y = 0; y <= WORLD_HEIGHT; y += GRID_SIZE) {
+    for (let y = 0; y <= WORLD_HEIGHT; y += DEBUG_GRID_SIZE_PX) {
       grid.lineBetween(0, y, WORLD_WIDTH, y);
     }
 

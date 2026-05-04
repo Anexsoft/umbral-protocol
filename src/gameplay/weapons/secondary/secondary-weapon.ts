@@ -11,14 +11,54 @@ import type {
   SecondaryWeaponImprovements,
 } from "@gameplay/weapons/secondary/types";
 
+function isEnvDebugEnabled(): boolean {
+  const value = import.meta.env.VITE_GAME_DEBUG;
+  if (value === undefined || value.trim() === "") return false;
+
+  return value.trim().toLowerCase() === "true";
+}
+
+function readEnvImprovementLevel(
+  value: string | undefined,
+  fallback: number | undefined,
+  maxLevel: number,
+): number {
+  if (!isEnvDebugEnabled()) {
+    return readInitialImprovementLevel(fallback, maxLevel);
+  }
+
+  if (value === undefined || value.trim() === "") {
+    return readInitialImprovementLevel(fallback, maxLevel);
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return readInitialImprovementLevel(fallback, maxLevel);
+  }
+
+  return Phaser.Math.Clamp(Math.floor(parsed), 0, Math.max(0, maxLevel));
+}
+
+function readInitialImprovementLevel(
+  value: number | undefined,
+  maxLevel: number,
+): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return 0;
+
+  return Phaser.Math.Clamp(Math.floor(value), 0, Math.max(0, maxLevel));
+}
+
 export class SecondaryWeapon {
+  private static readonly MAX_PLAYER_LEVEL = 50;
+
   readonly scene: Phaser.Scene;
 
   private readonly attackHandler: SecondaryWeaponAttackHandler;
   private readonly cooldownHandler: SecondaryWeaponCooldownHandler;
   private readonly improvementsHandler: SecondaryWeaponImprovementsHandler;
   private readonly _baseDamageBonusRatio: number;
-  private readonly _baseAttackRadius: number;
+  private readonly _baseRadius: number;
+  private readonly _radiusMaxLevel: number;
   private readonly _upgradeConfig: SecondaryWeaponUpgradeYaml;
   private readonly _improvements: SecondaryWeaponImprovements;
   private _staminaCost = 0;
@@ -30,7 +70,8 @@ export class SecondaryWeapon {
     this.scene = scene;
     const data = getGameData().secondaryWeapon;
     this._baseDamageBonusRatio = data.damage_bonus_ratio;
-    this._baseAttackRadius = data.attack_radius;
+    this._baseRadius = data.radius;
+    this._radiusMaxLevel = data.radius_max_level ?? data.radius;
     this._upgradeConfig = data.upgrades;
     this._staminaCost = data.stamina_cost;
     this._cooldownTimeSec = data.cooldown;
@@ -38,14 +79,30 @@ export class SecondaryWeapon {
     this.cooldownHandler = new SecondaryWeaponCooldownHandler();
     this.improvementsHandler = new SecondaryWeaponImprovementsHandler();
     this._improvements = this.improvementsHandler.createInitialLevels();
+    this._improvements.knifeEnhancement = readEnvImprovementLevel(
+      import.meta.env.VITE_PLAYER_SECONDARY_KNIFE_ENHANCEMENT_LEVEL,
+      this._upgradeConfig.knife_enhancement.level,
+      this._upgradeConfig.knife_enhancement.max_level,
+    );
   }
 
   update(deltaMs: number): void {
     this.cooldownHandler.handle({ weapon: this, deltaMs });
   }
 
-  tryAttack(x: number, y: number, scaledDamage?: number): boolean {
-    return this.attackHandler.handle({ weapon: this, x, y, scaledDamage });
+  tryAttack(
+    x: number,
+    y: number,
+    scaledDamage?: number,
+    playerLevel: number = 1,
+  ): boolean {
+    return this.attackHandler.handle({
+      weapon: this,
+      x,
+      y,
+      scaledDamage,
+      playerLevel,
+    });
   }
 
   get isReady(): boolean {
@@ -68,9 +125,17 @@ export class SecondaryWeapon {
     );
   }
 
-  get attackRadius(): number {
-    return this.improvementsHandler.getAttackRadius(
-      this._baseAttackRadius,
+  getRadius(playerLevel: number = 1): number {
+    const levelProgressRatio = Phaser.Math.Clamp(
+      (playerLevel - 1) / (SecondaryWeapon.MAX_PLAYER_LEVEL - 1),
+      0,
+      1,
+    );
+
+    return this.improvementsHandler.getRadius(
+      this._baseRadius,
+      this._radiusMaxLevel,
+      levelProgressRatio,
       this._improvements,
       this._upgradeConfig,
     );

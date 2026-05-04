@@ -7,7 +7,6 @@ import type { PlayerInput } from "@gameplay/player/types";
 
 const theme = getTheme();
 
-const DASH_DURATION_MS = 150;
 const DASH_SPEED_MULTIPLIER = 5;
 
 type DashHandlerInput = {
@@ -46,7 +45,7 @@ export class DashHandler {
 
     player.startDashCooldown();
     player.dashActive = true;
-    player.dashTimerMs = DASH_DURATION_MS;
+    player.dashTimerMs = player.dashDurationMs;
 
     const dashDirection = new Phaser.Math.Vector2(0, 0);
     if (input.left?.isDown) dashDirection.x -= 1;

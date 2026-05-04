@@ -1,5 +1,7 @@
 import * as Phaser from "phaser";
 
+import { BASE_UNIT_PX } from "@config/constants";
+
 import { getGameData } from "@data/game-data";
 import { getTheme, hexToNumber } from "@data/theme/theme";
 import type { PlayerBalanceConfig } from "@data/player/types";
@@ -22,6 +24,9 @@ type PlayerCombatValues = {
 };
 
 const theme = getTheme();
+const PLAYER_HURTBOX_RATIO = 0.72;
+const MAX_PLAYER_LEVEL = 50;
+const BURST_TRAIL_INTERVAL_MS = 64;
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   readonly primaryWeapon: PrimaryWeapon;
@@ -47,13 +52,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   private _burstTimerMs = 0;
   private _level = 1;
   private _totalXp = 0;
-  private _scorePoints = 0;
   private _credits = 0;
   private _enemiesDefeated = 0;
   private _dashActive = false;
   private _dashTimerMs = 0;
-  private burstAura?: Phaser.GameObjects.Arc;
-  private burstAuraTween?: Phaser.Tweens.Tween;
+  private burstTrailTimerMs = 0;
+  private damageTween?: Phaser.Tweens.Tween;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, "player");
@@ -66,7 +70,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.setCollideWorldBounds(true);
     this.setPushable(false);
-    this.setScale(this.playerScale);
+    this.applyVisualSize(this.playerScale);
 
     this.primaryWeapon = new PrimaryWeapon(scene);
     this.secondaryWeapon = new SecondaryWeapon(scene);
@@ -111,14 +115,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   applyDamage(amount: number): void {
     this._health = Math.max(0, this._health - amount);
+    this.applyDamageEffect();
     if (!this.isAlive) this.setVelocity(0, 0);
   }
 
-  addKillRewards(credits: number, score: number, xp: number): void {
+  addKillRewards(credits: number, xp: number): void {
     const previousLevel = this._level;
     this._enemiesDefeated += 1;
     this._credits += Math.max(0, Math.round(credits));
-    this._scorePoints += Math.max(0, Math.round(score));
     this._totalXp += Math.max(0, Math.round(xp));
     this.syncLevelFromXp();
     if (this._level !== previousLevel) {
@@ -174,6 +178,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   activateBurstMode(): void {
     this._burstTimerMs = this.balance.burstDurationSec * 1000;
+    this.burstTrailTimerMs = 0;
     this.enableBurstVisuals();
   }
 
@@ -223,10 +228,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   get lvl(): number {
     return this._level;
-  }
-
-  get score(): number {
-    return this._scorePoints;
   }
 
   get credits(): number {
@@ -306,7 +307,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   get blowRadiusMax(): number {
-    return this.balance.blowRadiusMax;
+    return Math.round(
+      this.balance.blowRadiusMax * (1 + this.blowRadiusBonusRatio),
+    );
+  }
+
+  get dashDurationMs(): number {
+    return Math.round(150 * (1 + this.dashDistanceBonusRatio));
   }
 
   get burstStaminaCost(): number {
@@ -315,7 +322,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   get moveSpeed(): number {
     if (!this.burstActive) return this._moveSpeed;
-    return this._moveSpeed * (1 + this.balance.burstMoveSpeedBonusRatio);
+    return this._moveSpeed * (1 + this.burstMoveSpeedBonusRatio);
   }
 
   get staminaRecoveryPerSecond(): number {
@@ -338,11 +345,55 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   get burstDurationMs(): number {
-    return this.balance.burstDurationSec * 1000;
+    return Math.round(this.burstDurationSec * 1000);
   }
 
   get playerScale(): number {
     return this.balance.baseValues.scale;
+  }
+
+  get dashDistanceBonusRatio(): number {
+    return (
+      this.balance.dashDistanceBonusRatioMaxLevel * this.skillLevelProgressRatio
+    );
+  }
+
+  get blowRadiusBonusRatio(): number {
+    return (
+      this.balance.blowRadiusBonusRatioMaxLevel * this.skillLevelProgressRatio
+    );
+  }
+
+  get burstMoveSpeedBonusRatio(): number {
+    return Phaser.Math.Linear(
+      this.balance.burstMoveSpeedBonusRatio,
+      this.balance.burstMoveSpeedBonusRatioMaxLevel,
+      this.skillLevelProgressRatio,
+    );
+  }
+
+  get burstDurationSec(): number {
+    return Phaser.Math.Linear(
+      this.balance.burstDurationSec,
+      this.balance.burstDurationSecMaxLevel,
+      this.skillLevelProgressRatio,
+    );
+  }
+
+  get burstFireRateBonusRatio(): number {
+    return Phaser.Math.Linear(
+      this.balance.burstFireRateBonusRatio,
+      this.balance.burstFireRateBonusRatioMaxLevel,
+      this.skillLevelProgressRatio,
+    );
+  }
+
+  get burstReloadSpeedBonusRatio(): number {
+    return Phaser.Math.Linear(
+      this.balance.burstReloadSpeedBonusRatio,
+      this.balance.burstReloadSpeedBonusRatioMaxLevel,
+      this.skillLevelProgressRatio,
+    );
   }
 
   get burstTimerMs(): number {
@@ -351,20 +402,28 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
 
   get primaryFireIntervalMultiplier(): number {
     if (!this.burstActive) return 1;
-    return 1 / (1 + this.balance.burstFireRateBonusRatio);
+    return 1 / (1 + this.burstFireRateBonusRatio);
   }
 
   get primaryReloadDurationMultiplier(): number {
     if (!this.burstActive) return 1;
-    return 1 / (1 + this.balance.burstReloadSpeedBonusRatio);
+    return 1 / (1 + this.burstReloadSpeedBonusRatio);
+  }
+
+  private get skillLevelProgressRatio(): number {
+    return Phaser.Math.Clamp((this._level - 1) / (MAX_PLAYER_LEVEL - 1), 0, 1);
   }
 
   private initializeState(): void {
-    this._totalXp =
+    const configuredXp =
       typeof this.balance.baseValues.xp === "number"
         ? this.balance.baseValues.xp
         : 0;
-    this._scorePoints = this.balance.baseValues.score ?? 0;
+    const initialLevel = Phaser.Math.Clamp(this.balance.initialLevel, 1, 50);
+    const minimumXpForLevel =
+      this.balance.levelXpThresholds[initialLevel - 1] ?? 0;
+
+    this._totalXp = Math.max(configuredXp, minimumXpForLevel);
     this._credits = this.balance.baseValues.credits ?? 0;
     this.syncLevelFromXp();
     this.recomputeAllFromLevel(true);
@@ -394,7 +453,6 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this._maxStamina = newMaxStamina;
       this._stamina = newMaxStamina;
       this._moveSpeed = newMoveSpeed;
-      return;
     }
 
     const healthRatio =
@@ -447,60 +505,105 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     );
     this._burstTimerMs = Math.max(0, this._burstTimerMs - deltaMs);
 
-    if (this.burstActive) this.syncBurstVisuals();
-    else if (this.burstAura) this.disableBurstVisuals();
+    if (this.burstActive) this.syncBurstVisuals(deltaMs);
+    else this.disableBurstVisuals();
   }
 
   private enableBurstVisuals(): void {
     this.setTint(hexToNumber(theme.semantic.fx.grenade));
-    if (!this.burstAura) {
-      this.burstAura = this.scene.add.circle(
-        this.x,
-        this.y,
-        22,
-        hexToNumber(theme.semantic.fx.grenade),
-        0.16,
-      );
-      this.burstAura.setDepth(this.depth - 1);
-      this.burstAura.setStrokeStyle(
-        2,
-        hexToNumber(theme.semantic.fx.grenade_burst),
-        0.85,
-      );
-    }
-
-    if (!this.burstAuraTween) {
-      this.burstAuraTween = this.scene.tweens.add({
-        targets: this.burstAura,
-        alpha: { from: 0.14, to: 0.38 },
-        scale: { from: 0.95, to: 1.4 },
-        duration: 280,
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.easeInOut",
-      });
-    }
-
-    this.syncBurstVisuals();
+    this.spawnBurstTrailFx(0.54);
   }
 
-  private syncBurstVisuals(): void {
-    if (!this.burstAura) return;
-    this.burstAura.setPosition(this.x, this.y);
+  private syncBurstVisuals(deltaMs: number): void {
+    this.burstTrailTimerMs = Math.max(0, this.burstTrailTimerMs - deltaMs);
+
+    const body = this.body as Phaser.Physics.Arcade.Body | undefined;
+    const isMoving = (body?.velocity.lengthSq() ?? 0) > 36;
+    if (!isMoving || this.burstTrailTimerMs > 0) return;
+
+    this.burstTrailTimerMs = BURST_TRAIL_INTERVAL_MS;
+    this.spawnBurstTrailFx();
+  }
+
+  private spawnBurstTrailFx(alpha = 0.54): void {
+    const shadow = this.scene.add
+      .sprite(this.x, this.y, "player")
+      .setScale(this.scaleX, this.scaleY)
+      .setRotation(this.rotation)
+      .setDepth(this.depth - 1)
+      .setAlpha(alpha)
+      .setTint(hexToNumber(theme.semantic.fx.grenade_burst));
+
+    // La duración del shadow es igual a lo que queda de burst
+    const duration = Math.max(220, this._burstTimerMs);
+    this.scene.tweens.add({
+      targets: shadow,
+      alpha: 0,
+      scaleX: shadow.scaleX * 0.82,
+      scaleY: shadow.scaleY * 0.82,
+      duration,
+      ease: "Cubic.Out",
+      onComplete: () => shadow.destroy(),
+    });
+  }
+
+  private applyVisualSize(scaleMultiplier: number): void {
+    const sizePx = BASE_UNIT_PX * scaleMultiplier;
+    const hurtboxPx = Math.max(18, Math.round(sizePx * PLAYER_HURTBOX_RATIO));
+    this.setDisplaySize(sizePx, sizePx);
+    this.body?.setSize(hurtboxPx, hurtboxPx, true);
+  }
+
+  private applyDamageEffect(): void {
+    if (!this.active) return;
+
+    const baseScaleX = this.scaleX;
+    const baseScaleY = this.scaleY;
+
+    this.damageTween?.stop();
+    this.setAlpha(0.84);
+    this.setTint(hexToNumber(theme.semantic.text.primary)).setTintMode(
+      Phaser.TintModes.FILL,
+    );
+
+    this.damageTween = this.scene.tweens.add({
+      targets: this,
+      scaleX: baseScaleX * 1.05,
+      scaleY: baseScaleY * 1.05,
+      alpha: 1,
+      duration: 70,
+      yoyo: true,
+      repeat: 0,
+      onComplete: () => {
+        this.damageTween = undefined;
+        if (!this.active) return;
+
+        this.setScale(baseScaleX, baseScaleY);
+        this.setAlpha(1);
+        if (this.burstActive) {
+          this.setTint(hexToNumber(theme.semantic.fx.grenade));
+        } else {
+          this.clearTint();
+        }
+      },
+    });
   }
 
   private playLevelUpEffect(): void {
+    const baseScaleX = this.scaleX;
+    const baseScaleY = this.scaleY;
+
     this.scene.tweens.killTweensOf(this);
     this.scene.tweens.add({
       targets: this,
-      scaleX: this.playerScale * 1.16,
-      scaleY: this.playerScale * 1.16,
+      scaleX: baseScaleX * 1.16,
+      scaleY: baseScaleY * 1.16,
       duration: 300,
       yoyo: true,
       repeat: 1,
       ease: "Back.Out",
       onComplete: () => {
-        if (this.active) this.setScale(this.playerScale);
+        if (this.active) this.setScale(baseScaleX, baseScaleY);
       },
     });
 
@@ -540,10 +643,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   private disableBurstVisuals(): void {
+    this.damageTween?.stop();
+    this.damageTween = undefined;
     this.clearTint();
-    this.burstAuraTween?.stop();
-    this.burstAuraTween = undefined;
-    this.burstAura?.destroy();
-    this.burstAura = undefined;
+    this.setAlpha(1);
+    this.burstTrailTimerMs = 0;
   }
 }

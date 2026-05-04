@@ -86,8 +86,8 @@ export function renderPauseSummaryTab(context: PauseTabRenderContext): void {
             color: theme.semantic.text.success,
           },
           {
-            label: "SCORE",
-            value: String(context.player.score),
+            label: "XP_PROGRESS",
+            value: `${progressPct}%`,
             color: theme.semantic.text.primary,
           },
         ],

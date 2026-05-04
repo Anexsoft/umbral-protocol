@@ -12,40 +12,41 @@ export interface PrimaryWeaponModeYaml {
 export interface PrimaryWeaponUpgradeProgressionYaml {
   name: string;
   description?: string;
+  level?: number;
   max_level: number;
   base_cost: number;
   next_level_cost_multiplier: number;
 }
 
 export interface PrimaryWeaponExtendedMagazineUpgradeYaml extends PrimaryWeaponUpgradeProgressionYaml {
-  ammo_bonus_per_level: number;
+  ammo_bonus_max_level: number;
 }
 
 export interface PrimaryWeaponReloadOptimizationUpgradeYaml extends PrimaryWeaponUpgradeProgressionYaml {
-  reload_time_reduction_ratio_per_level: number;
+  reload_time_reduction_ratio_max_level: number;
 }
 
 export interface PrimaryWeaponFireRateOptimizationUpgradeYaml extends PrimaryWeaponUpgradeProgressionYaml {
-  fire_rate_reduction_ratio_per_level: number;
+  fire_rate_reduction_ratio_max_level: number;
 }
 
 export interface PrimaryWeaponCriticalProtocolUpgradeYaml extends PrimaryWeaponUpgradeProgressionYaml {
   unlocks_critical_on_level: number;
-  crit_chance_ratio_per_level: number;
+  crit_chance_ratio_max_level: number;
   crit_damage_multiplier: number;
 }
 
 export interface PrimaryWeaponModeImprovementSingleUpgradeYaml {
-  fire_rate_reduction_ratio_per_level: number;
+  fire_rate_reduction_ratio_max_level: number;
 }
 
 export interface PrimaryWeaponModeImprovementSpreadUpgradeYaml {
-  bonus_pellets_every_levels: number;
-  spread_damage_multiplier_bonus_per_level: number;
+  bonus_pellets_max_level: number;
+  spread_damage_multiplier_bonus_max_level: number;
 }
 
 export interface PrimaryWeaponModeImprovementPowerUpgradeYaml {
-  damage_multiplier_bonus_per_level: number;
+  damage_multiplier_bonus_max_level: number;
 }
 
 export interface PrimaryWeaponModeImprovementUpgradeYaml extends PrimaryWeaponUpgradeProgressionYaml {

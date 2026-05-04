@@ -45,7 +45,7 @@ export class PlayerHudScene extends Phaser.Scene {
   private roundValue!: Phaser.GameObjects.Text;
   private enemyValue!: Phaser.GameObjects.Text;
   private creditsValueText!: Phaser.GameObjects.Text;
-  private scoreValueText!: Phaser.GameObjects.Text;
+  private xpValueText!: Phaser.GameObjects.Text;
   private lifeText!: Phaser.GameObjects.Text;
   private staminaText!: Phaser.GameObjects.Text;
   private hpBar!: Phaser.GameObjects.Graphics;
@@ -220,7 +220,7 @@ export class PlayerHudScene extends Phaser.Scene {
   private setupTopRight(): void {
     const rightX = this.scale.width - 40;
 
-    this.scoreValueText = this.add
+    this.xpValueText = this.add
       .text(rightX, 38, "00000", {
         fontFamily: this.FONT_FAMILY,
         fontSize: uiTheme.typography.sizes.xxl,
@@ -231,7 +231,7 @@ export class PlayerHudScene extends Phaser.Scene {
       .setShadow(0, 0, this.TXT_PRIMARY, 5, true, true);
 
     this.add
-      .text(rightX - 140, 41, "SCORE:", {
+      .text(rightX - 140, 41, "XP:", {
         fontFamily: this.FONT_FAMILY,
         fontSize: uiTheme.typography.sizes.md,
         color: this.TXT_LABEL,
@@ -258,7 +258,7 @@ export class PlayerHudScene extends Phaser.Scene {
   }
 
   private updateTopRight(): void {
-    this.scoreValueText.setText(this.player.score.toString().padStart(5, "0"));
+    this.xpValueText.setText(this.player.totalXp.toString().padStart(5, "0"));
     this.creditsValueText.setText(
       this.player.credits.toString().padStart(5, "0"),
     );

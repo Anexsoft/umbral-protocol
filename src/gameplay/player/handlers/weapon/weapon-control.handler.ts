@@ -39,6 +39,7 @@ export class WeaponControlHandler {
         player.x,
         player.y,
         meleeDamage,
+        player.lvl,
       );
       if (attacked) {
         player.consumeStamina(player.secondaryWeapon.staminaCost);

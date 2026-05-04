@@ -1,6 +1,6 @@
 import * as Phaser from "phaser";
 
-import type { Enemy } from "@gameplay/enemies/enemy";
+import type { Enemy } from "@gameplay/enemies/Enemy";
 
 type EnemyMovementHandlerInput = {
   enemy: Enemy;

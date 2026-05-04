@@ -1,5 +1,7 @@
 import * as Phaser from "phaser";
 
+import { BASE_UNIT_PX } from "@config/constants";
+
 import {
   enemyStatMultiplier,
   enemyVisualScale,
@@ -16,7 +18,7 @@ const theme = getTheme();
 const RANGED_PROJECTILE_RADIUS = 6;
 const RANGED_PROJECTILE_SPEED_PX = 280;
 const RANGED_PROJECTILE_LIFETIME_MS = 2200;
-const RANGED_ATTACK_COOLDOWN_MS = 1300;
+const ENEMY_HURTBOX_RATIO = 0.52;
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite {
   readonly target: Player;
@@ -32,14 +34,14 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   private _speed = 0;
   private defense = 0;
   private rolledCredits = 0;
-  private rolledScore = 0;
   private rolledXp = 0;
   private attackDamage = 0;
+  private attackCooldownDurationMs = 1000;
   private isBoss = false;
   private isDying = false;
   private attackType: EnemyAttackType = "melee";
   private attackRange = 48;
-  private rangedAttackCooldownMs = 0;
+  private attackCooldownMs = 0;
   private knockbackTimerMs = 0;
 
   constructor(
@@ -59,7 +61,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
     this.setCollideWorldBounds(true);
     this.setImmovable(false);
-    this.setBounce(0.3);
+    this.setPushable(false);
+    this.setBounce(0);
     this.movementHandler = new EnemyMovementHandler();
     this.initializeFromEntry(id);
     this.refreshHealthTint();
@@ -77,10 +80,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
       return;
     }
 
-    this.rangedAttackCooldownMs = Math.max(
-      0,
-      this.rangedAttackCooldownMs - deltaMs,
-    );
+    this.attackCooldownMs = Math.max(0, this.attackCooldownMs - deltaMs);
 
     const angle = Phaser.Math.Angle.Between(
       this.x,
@@ -100,9 +100,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
       if (distance <= this.attackRange) {
         this.setVelocity(0, 0);
-        if (this.rangedAttackCooldownMs === 0) {
+        if (this.canAttack) {
           this.fireProjectile(angle);
-          this.rangedAttackCooldownMs = RANGED_ATTACK_COOLDOWN_MS;
+          this.startAttackCooldown();
         }
         return;
       }
@@ -147,7 +147,11 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 
   get canDealContactDamage(): boolean {
-    return this.attackType === "melee";
+    return this.attackType === "melee" && this.canAttack;
+  }
+
+  startAttackCooldown(): void {
+    this.attackCooldownMs = this.attackCooldownDurationMs;
   }
 
   get boss(): boolean {
@@ -185,41 +189,52 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
     const entry = getGameData().enemyById.get(id);
     if (!entry) throw new Error(`Enemy id "${id}" not found in data.`);
 
-    const scaling = getGameData().enemyLevelScaling;
+    const data = getGameData();
+    const scaling = data.enemyLevelScaling;
     const levelScale = enemyStatMultiplier(this.level, scaling);
+    const combatScale = levelScale * data.gameSettings.difficultyScaling;
     const stats = entry.base_stats;
 
     this.isBoss = entry.boss ?? false;
-    this.attackType = entry.attack_id ?? "melee";
+    this.attackType = entry.type ?? "melee";
+    this.attackCooldownDurationMs = (entry.attack_cooldown ?? 1) * 1000;
     this.attackRange = entry.attack_range ?? 48;
     this.enemyName = entry.name;
-    this.maxHealth = Math.round(stats.vit * levelScale);
+    this.maxHealth = Math.round(stats.hp * combatScale);
     this.health = this.maxHealth;
     this._speed = Math.round(stats.speed * levelScale);
-    this.defense = stats.defense * levelScale;
-    this.attackDamage = Math.max(1, Math.round(stats.attack * levelScale));
+    this.defense = stats.defense * combatScale;
+    this.attackDamage = Math.max(1, Math.round(stats.damage * combatScale));
 
     const [rewardMin, rewardMax] = stats.rewards;
-    const [scoreMin, scoreMax] = stats.score;
-    const xpRange = stats.xp ?? stats.score;
-    const [xpMin, xpMax] = xpRange;
+    const [xpMin, xpMax] = stats.xp;
 
     this.rolledCredits = Phaser.Math.Between(
-      Math.round(rewardMin * levelScale),
-      Math.round(rewardMax * levelScale),
-    );
-    this.rolledScore = Phaser.Math.Between(
-      Math.round(scoreMin * levelScale),
-      Math.round(scoreMax * levelScale),
+      Math.round(rewardMin * combatScale),
+      Math.round(rewardMax * combatScale),
     );
     this.rolledXp = Phaser.Math.Between(
-      Math.round(xpMin * levelScale),
-      Math.round(xpMax * levelScale),
+      Math.round(xpMin * combatScale),
+      Math.round(xpMax * combatScale),
     );
 
-    this.setScale(
+    this.applyVisualSize(
       enemyVisualScale(stats.scale, this.level, this.isBoss, scaling),
     );
+  }
+
+  private applyVisualSize(scaleMultiplier: number): void {
+    const sizePx = BASE_UNIT_PX * scaleMultiplier;
+    const hurtboxPx = Math.max(
+      16,
+      Math.round(BASE_UNIT_PX * ENEMY_HURTBOX_RATIO * Math.sqrt(scaleMultiplier)),
+    );
+    this.setDisplaySize(sizePx, sizePx);
+    this.body?.setSize(hurtboxPx, hurtboxPx, true);
+  }
+
+  private get canAttack(): boolean {
+    return this.attackCooldownMs === 0;
   }
 
   private fireProjectile(angle: number): void {
@@ -334,7 +349,6 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite {
 
     this.scene.events.emit("enemy:defeated", {
       credits: this.rolledCredits,
-      score: this.rolledScore,
       xp: this.rolledXp,
       x: this.x,
       y: this.y,

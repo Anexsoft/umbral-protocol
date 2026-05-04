@@ -6,6 +6,11 @@ import type {
 } from "@gameplay/weapons/secondary/types";
 
 export class SecondaryWeaponImprovementsHandler {
+  private getUpgradeProgress(level: number, maxLevel: number): number {
+    if (maxLevel <= 0) return 0;
+    return Math.max(0, Math.min(1, level / maxLevel));
+  }
+
   createInitialLevels(): SecondaryWeaponImprovements {
     return {
       knifeEnhancement: 0,
@@ -57,22 +62,34 @@ export class SecondaryWeaponImprovementsHandler {
     levels: SecondaryWeaponImprovements,
     upgrades: SecondaryWeaponUpgradeYaml,
   ): number {
+    const progress = this.getUpgradeProgress(
+      levels.knifeEnhancement,
+      upgrades.knife_enhancement.max_level,
+    );
+
     return (
       baseDamageBonusRatio +
-      levels.knifeEnhancement *
-        upgrades.knife_enhancement.damage_bonus_ratio_per_level
+      upgrades.knife_enhancement.damage_bonus_ratio_max_level * progress
     );
   }
 
-  getAttackRadius(
-    baseAttackRadius: number,
+  getRadius(
+    baseRadius: number,
+    radiusMaxLevel: number,
+    levelProgressRatio: number,
     levels: SecondaryWeaponImprovements,
     upgrades: SecondaryWeaponUpgradeYaml,
   ): number {
+    const progress = this.getUpgradeProgress(
+      levels.knifeEnhancement,
+      upgrades.knife_enhancement.max_level,
+    );
+
     return (
-      baseAttackRadius +
-      levels.knifeEnhancement *
-        upgrades.knife_enhancement.attack_radius_bonus_per_level
+      Math.round(
+        baseRadius + (radiusMaxLevel - baseRadius) * levelProgressRatio,
+      ) +
+      Math.round(upgrades.knife_enhancement.radius_bonus_max_level * progress)
     );
   }
 

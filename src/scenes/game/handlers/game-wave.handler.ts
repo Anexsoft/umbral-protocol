@@ -5,7 +5,7 @@ import { WORLD_HEIGHT, WORLD_WIDTH } from "@config/constants";
 import { getGameData } from "@data/game-data";
 import type { RoundSpawnEntry } from "@data/rounds/types";
 
-import { Enemy } from "@gameplay/enemies/enemy";
+import { Enemy } from "@gameplay/enemies/Enemy";
 import { EnemyTypeId } from "@gameplay/enemies/types";
 import type { Player } from "@gameplay/player/player";
 

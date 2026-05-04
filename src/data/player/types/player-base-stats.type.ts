@@ -4,7 +4,6 @@ export interface PlayerBaseValues {
   stamina: number;
   speed: number;
   scale: number;
-  score: number;
   credits?: number;
   xp?: number;
 }

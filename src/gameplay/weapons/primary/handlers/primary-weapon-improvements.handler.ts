@@ -9,6 +9,11 @@ import {
 } from "@gameplay/weapons/primary/types";
 
 export class PrimaryWeaponImprovementsHandler {
+  private getUpgradeProgress(level: number, maxLevel: number): number {
+    if (maxLevel <= 0) return 0;
+    return Math.max(0, Math.min(1, level / maxLevel));
+  }
+
   createInitialLevels(): PrimaryWeaponImprovements {
     return {
       extendedMagazine: 0,
@@ -72,9 +77,14 @@ export class PrimaryWeaponImprovementsHandler {
     levels: PrimaryWeaponImprovements,
     upgrades: PrimaryWeaponUpgradeYaml,
   ): number {
+    const progress = this.getUpgradeProgress(
+      levels.extendedMagazine,
+      upgrades.extended_magazine.max_level,
+    );
+
     return (
       baseMagazineCapacity +
-      levels.extendedMagazine * upgrades.extended_magazine.ammo_bonus_per_level
+      Math.round(upgrades.extended_magazine.ammo_bonus_max_level * progress)
     );
   }
 
@@ -82,9 +92,13 @@ export class PrimaryWeaponImprovementsHandler {
     levels: PrimaryWeaponImprovements,
     upgrades: PrimaryWeaponUpgradeYaml,
   ): number {
+    const progress = this.getUpgradeProgress(
+      levels.reloadOptimization,
+      upgrades.reload_optimization.max_level,
+    );
     const reduction =
-      levels.reloadOptimization *
-      upgrades.reload_optimization.reload_time_reduction_ratio_per_level;
+      upgrades.reload_optimization.reload_time_reduction_ratio_max_level *
+      progress;
     return Math.max(0.2, 1 - reduction);
   }
 
@@ -92,9 +106,13 @@ export class PrimaryWeaponImprovementsHandler {
     levels: PrimaryWeaponImprovements,
     upgrades: PrimaryWeaponUpgradeYaml,
   ): number {
+    const progress = this.getUpgradeProgress(
+      levels.fireRateOptimization,
+      upgrades.fire_rate_optimization.max_level,
+    );
     const reduction =
-      levels.fireRateOptimization *
-      upgrades.fire_rate_optimization.fire_rate_reduction_ratio_per_level;
+      upgrades.fire_rate_optimization.fire_rate_reduction_ratio_max_level *
+      progress;
     return Math.max(0.2, 1 - reduction);
   }
 
@@ -104,20 +122,22 @@ export class PrimaryWeaponImprovementsHandler {
     upgrades: PrimaryWeaponUpgradeYaml,
   ): WeaponModeConfig {
     const modeLevel = levels.modeImprovement;
-    const singleReduction =
-      modeLevel *
-      upgrades.mode_improvement.single.fire_rate_reduction_ratio_per_level;
-    const spreadPelletEvery = Math.max(
-      1,
-      upgrades.mode_improvement.spread.bonus_pellets_every_levels,
+    const modeProgress = this.getUpgradeProgress(
+      modeLevel,
+      upgrades.mode_improvement.max_level,
     );
-    const spreadPelletBonus = Math.floor(modeLevel / spreadPelletEvery);
+    const singleReduction =
+      upgrades.mode_improvement.single.fire_rate_reduction_ratio_max_level *
+      modeProgress;
+    const spreadPelletBonus = Math.round(
+      upgrades.mode_improvement.spread.bonus_pellets_max_level * modeProgress,
+    );
     const spreadDamageBonus =
-      modeLevel *
-      upgrades.mode_improvement.spread.spread_damage_multiplier_bonus_per_level;
+      upgrades.mode_improvement.spread
+        .spread_damage_multiplier_bonus_max_level * modeProgress;
     const powerDamageBonus =
-      modeLevel *
-      upgrades.mode_improvement.power.damage_multiplier_bonus_per_level;
+      upgrades.mode_improvement.power.damage_multiplier_bonus_max_level *
+      modeProgress;
 
     return {
       [PrimaryWeaponMode.single]: {
@@ -155,9 +175,11 @@ export class PrimaryWeaponImprovementsHandler {
       return { damage: rawDamage, isCritical: false };
     }
 
+    const progress = this.getUpgradeProgress(level, critical.max_level);
+
     const criticalChance = Math.min(
       1,
-      level * critical.crit_chance_ratio_per_level,
+      critical.crit_chance_ratio_max_level * progress,
     );
     if (Math.random() >= criticalChance) {
       return { damage: rawDamage, isCritical: false };

@@ -1,13 +1,17 @@
+import gameSettingsYaml from "@data/game/game-settings.yml?raw";
+import type { GameSettingsConfig, GameSettingsYaml } from "@data/game/types";
 import enemiesYaml from "@data/enemies/enemies.yml?raw";
 import enemyScalingYaml from "@data/enemies/enemy-scaling.yml?raw";
-import healthPackYaml from "@data/consumables/health-pack.yml?raw";
-import staminaStimYaml from "@data/consumables/stamina-stim.yml?raw";
+import creditPickupYaml from "@data/pickups/credit.yml?raw";
+import healthPackYaml from "@data/pickups/health-pack.yml?raw";
+import staminaStimYaml from "@data/pickups/stamina-stim.yml?raw";
 import type {
-  HealthConsumableYaml,
-  HealthConsumableYamlEntry,
-  StaminaConsumableYaml,
-  StaminaConsumableYamlEntry,
-} from "@data/consumables/types";
+  CreditPickupYaml,
+  HealthPickupYaml,
+  HealthPickupYamlEntry,
+  StaminaPickupYaml,
+  StaminaPickupYamlEntry,
+} from "@data/pickups/types";
 import type {
   EnemyLevelScalingConfig,
   EnemyYamlEntry,
@@ -52,6 +56,53 @@ import yaml from "js-yaml";
 
 let cached: GameDataBundle | null = null;
 
+function isEnvDebugEnabled(): boolean {
+  const value = import.meta.env.VITE_GAME_DEBUG;
+  if (value === undefined || value.trim() === "") return false;
+
+  return value.trim().toLowerCase() === "true";
+}
+
+function readEnvNumber(value: string | undefined, fallback: number): number {
+  if (value === undefined || value.trim() === "") return fallback;
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function applyPlayerEnvOverrides(raw: PlayerYamlRoot): PlayerYamlRoot {
+  if (!isEnvDebugEnabled()) return raw;
+
+  const env = import.meta.env;
+
+  return {
+    ...raw,
+    name: env.VITE_PLAYER_NAME?.trim() || raw.name,
+    credits: readEnvNumber(env.VITE_PLAYER_CREDITS, raw.credits ?? 0),
+    level: readEnvNumber(env.VITE_PLAYER_LEVEL, raw.level ?? 1),
+  };
+}
+
+function applyGameSettingsEnvOverrides(
+  raw: GameSettingsConfig,
+): GameSettingsConfig {
+  if (!isEnvDebugEnabled()) return raw;
+
+  const env = import.meta.env;
+
+  return {
+    ...raw,
+    startRound: Math.max(
+      1,
+      Math.floor(readEnvNumber(env.VITE_GAME_START_ROUND, raw.startRound)),
+    ),
+    difficultyScaling: Math.max(
+      0.01,
+      readEnvNumber(env.VITE_DIFFICULTY_SCALING, raw.difficultyScaling),
+    ),
+  };
+}
+
 const DEFAULT_LEVEL_GROWTH: PlayerLevelGrowthConfig = {
   hp_per_level: 1.2,
   damage_per_level: 0.08,
@@ -78,6 +129,20 @@ function parseEnemyLevelScaling(raw: unknown): EnemyLevelScalingConfig {
       partial.boss_scale_multiplier ??
       DEFAULT_ENEMY_LEVEL_SCALING.boss_scale_multiplier,
   };
+}
+
+function parseGameSettings(raw: unknown): GameSettingsConfig {
+  const partial = (raw as GameSettingsYaml) ?? {};
+
+  return applyGameSettingsEnvOverrides({
+    startRound: Math.max(1, Math.floor(partial.start_round ?? 1)),
+    difficultyScaling:
+      typeof partial.difficulty_scaling === "number" &&
+      Number.isFinite(partial.difficulty_scaling) &&
+      partial.difficulty_scaling > 0
+        ? partial.difficulty_scaling
+        : 1,
+  });
 }
 
 function defaultXpToNextLevel(): number[] {
@@ -114,16 +179,22 @@ function parsePlayer(
   const parsedSkills: PlayerSkillConfig[] = [];
   let dashCooldownSec = 3;
   let dashStaminaCost = 20;
+  let dashDistanceBonusRatioMaxLevel = 0;
   let blowCooldownSec = 10;
   let blowStaminaCost = 30;
   let blowDamageMultiplier = 1.5;
   let blowRadiusMax = 120;
+  let blowRadiusBonusRatioMaxLevel = 0;
   let burstCooldownSec = 6;
   let burstDurationSec = 4;
+  let burstDurationSecMaxLevel = 4;
   let burstStaminaCost = 15;
   let burstMoveSpeedBonusRatio = 0.3;
+  let burstMoveSpeedBonusRatioMaxLevel = 0.3;
   let burstFireRateBonusRatio = 0.45;
+  let burstFireRateBonusRatioMaxLevel = 0.45;
   let burstReloadSpeedBonusRatio = 0.35;
+  let burstReloadSpeedBonusRatioMaxLevel = 0.35;
 
   for (const skill of skills) {
     const parsedSkill: PlayerSkillConfig = {
@@ -137,6 +208,14 @@ function parsePlayer(
     if (skill.name === "Dash") {
       dashCooldownSec = skill.cooldown;
       dashStaminaCost = skill.stamina_cost;
+      if (
+        "distance_bonus_ratio_max_level" in skill &&
+        typeof skill.distance_bonus_ratio_max_level === "number"
+      ) {
+        dashDistanceBonusRatioMaxLevel = skill.distance_bonus_ratio_max_level;
+        parsedSkill.distanceBonusRatioMaxLevel =
+          skill.distance_bonus_ratio_max_level;
+      }
     }
     if (skill.name === "Blast" || skill.name === "Blow") {
       blowCooldownSec = skill.cooldown;
@@ -148,9 +227,17 @@ function parsePlayer(
         blowDamageMultiplier = skill.damage_multiplier;
         parsedSkill.damageMultiplier = skill.damage_multiplier;
       }
-      if ("radius_max" in skill && typeof skill.radius_max === "number") {
-        blowRadiusMax = skill.radius_max;
-        parsedSkill.radiusMax = skill.radius_max;
+      if ("radius" in skill && typeof skill.radius === "number") {
+        blowRadiusMax = skill.radius;
+        parsedSkill.radiusMax = skill.radius;
+      }
+      if (
+        "radius_bonus_ratio_max_level" in skill &&
+        typeof skill.radius_bonus_ratio_max_level === "number"
+      ) {
+        blowRadiusBonusRatioMaxLevel = skill.radius_bonus_ratio_max_level;
+        parsedSkill.radiusBonusRatioMaxLevel =
+          skill.radius_bonus_ratio_max_level;
       }
     }
     if (skill.name === "Burst" || skill.name === "Grenade") {
@@ -161,11 +248,27 @@ function parsePlayer(
         parsedSkill.durationSec = skill.duration;
       }
       if (
+        "duration_max_level" in skill &&
+        typeof skill.duration_max_level === "number"
+      ) {
+        burstDurationSecMaxLevel = skill.duration_max_level;
+        parsedSkill.durationSecMaxLevel = skill.duration_max_level;
+      }
+      if (
         "move_speed_bonus_ratio" in skill &&
         typeof skill.move_speed_bonus_ratio === "number"
       ) {
         burstMoveSpeedBonusRatio = skill.move_speed_bonus_ratio;
         parsedSkill.moveSpeedBonusRatio = skill.move_speed_bonus_ratio;
+      }
+      if (
+        "move_speed_bonus_ratio_max_level" in skill &&
+        typeof skill.move_speed_bonus_ratio_max_level === "number"
+      ) {
+        burstMoveSpeedBonusRatioMaxLevel =
+          skill.move_speed_bonus_ratio_max_level;
+        parsedSkill.moveSpeedBonusRatioMaxLevel =
+          skill.move_speed_bonus_ratio_max_level;
       }
       if (
         "fire_rate_bonus_ratio" in skill &&
@@ -175,11 +278,29 @@ function parsePlayer(
         parsedSkill.fireRateBonusRatio = skill.fire_rate_bonus_ratio;
       }
       if (
+        "fire_rate_bonus_ratio_max_level" in skill &&
+        typeof skill.fire_rate_bonus_ratio_max_level === "number"
+      ) {
+        burstFireRateBonusRatioMaxLevel =
+          skill.fire_rate_bonus_ratio_max_level;
+        parsedSkill.fireRateBonusRatioMaxLevel =
+          skill.fire_rate_bonus_ratio_max_level;
+      }
+      if (
         "reload_speed_bonus_ratio" in skill &&
         typeof skill.reload_speed_bonus_ratio === "number"
       ) {
         burstReloadSpeedBonusRatio = skill.reload_speed_bonus_ratio;
         parsedSkill.reloadSpeedBonusRatio = skill.reload_speed_bonus_ratio;
+      }
+      if (
+        "reload_speed_bonus_ratio_max_level" in skill &&
+        typeof skill.reload_speed_bonus_ratio_max_level === "number"
+      ) {
+        burstReloadSpeedBonusRatioMaxLevel =
+          skill.reload_speed_bonus_ratio_max_level;
+        parsedSkill.reloadSpeedBonusRatioMaxLevel =
+          skill.reload_speed_bonus_ratio_max_level;
       }
     }
 
@@ -188,6 +309,7 @@ function parsePlayer(
 
   const xpToNext = levelCurveRaw ?? defaultXpToNextLevel();
   const levelXpThresholds = buildLevelXpThresholds(xpToNext);
+  const initialLevel = Math.min(50, Math.max(1, Math.round(raw.level ?? 1)));
 
   const baseValues = {
     hp: raw.hp,
@@ -195,30 +317,35 @@ function parsePlayer(
     stamina: raw.stamina,
     speed: raw.speed,
     scale: raw.scale,
-    score: raw.score,
     credits: raw.credits,
     xp: raw.xp,
   };
   if (baseValues.credits === undefined) baseValues.credits = 0;
-  if (baseValues.score === undefined) baseValues.score = 0;
 
   return {
     name: raw.name,
     baseValues,
+    initialLevel,
     staminaRecoveryRate: raw.stm_recovery_rate,
     levelGrowth: levelGrowthRaw ?? DEFAULT_LEVEL_GROWTH,
     dashCooldownSec,
     dashStaminaCost,
+    dashDistanceBonusRatioMaxLevel,
     blowCooldownSec,
     blowStaminaCost,
     blowDamageMultiplier,
     blowRadiusMax,
+    blowRadiusBonusRatioMaxLevel,
     burstCooldownSec,
     burstDurationSec,
+    burstDurationSecMaxLevel,
     burstStaminaCost,
     burstMoveSpeedBonusRatio,
+    burstMoveSpeedBonusRatioMaxLevel,
     burstFireRateBonusRatio,
+    burstFireRateBonusRatioMaxLevel,
     burstReloadSpeedBonusRatio,
+    burstReloadSpeedBonusRatioMaxLevel,
     levelXpThresholds,
     skills: parsedSkills,
   };
@@ -233,45 +360,50 @@ function parsePrimaryWeapon(
   const upgrades = (upgradesRaw as PrimaryWeaponUpgradeYaml) ?? {
     extended_magazine: {
       name: "Extended Magazine",
+      level: 0,
       max_level: 0,
       base_cost: 0,
       next_level_cost_multiplier: 1,
-      ammo_bonus_per_level: 0,
+      ammo_bonus_max_level: 0,
     },
     reload_optimization: {
       name: "Reload Optimization",
+      level: 0,
       max_level: 0,
       base_cost: 0,
       next_level_cost_multiplier: 1,
-      reload_time_reduction_ratio_per_level: 0,
+      reload_time_reduction_ratio_max_level: 0,
     },
     fire_rate_optimization: {
       name: "Fire Rate Optimization",
+      level: 0,
       max_level: 0,
       base_cost: 0,
       next_level_cost_multiplier: 1,
-      fire_rate_reduction_ratio_per_level: 0,
+      fire_rate_reduction_ratio_max_level: 0,
     },
     critical_protocol: {
       name: "Critical Protocol",
+      level: 0,
       max_level: 0,
       base_cost: 0,
       next_level_cost_multiplier: 1,
       unlocks_critical_on_level: 1,
-      crit_chance_ratio_per_level: 0,
+      crit_chance_ratio_max_level: 0,
       crit_damage_multiplier: 1,
     },
     mode_improvement: {
       name: "Mode Improvement",
+      level: 0,
       max_level: 0,
       base_cost: 0,
       next_level_cost_multiplier: 1,
-      single: { fire_rate_reduction_ratio_per_level: 0 },
+      single: { fire_rate_reduction_ratio_max_level: 0 },
       spread: {
-        bonus_pellets_every_levels: 1,
-        spread_damage_multiplier_bonus_per_level: 0,
+        bonus_pellets_max_level: 0,
+        spread_damage_multiplier_bonus_max_level: 0,
       },
-      power: { damage_multiplier_bonus_per_level: 0 },
+      power: { damage_multiplier_bonus_max_level: 0 },
     },
   };
   return {
@@ -288,16 +420,24 @@ function parseSecondaryWeapon(
   const upgrades = (upgradesRaw as SecondaryWeaponUpgradeYaml) ?? {
     knife_enhancement: {
       name: "Knife Enhancement",
+      level: 0,
       max_level: 0,
       base_cost: 0,
       next_level_cost_multiplier: 1,
-      damage_bonus_ratio_per_level: 0,
-      attack_radius_bonus_per_level: 0,
+      damage_bonus_ratio_max_level: 0,
+      radius_bonus_max_level: 0,
     },
   };
 
+  const radiusMaxLevel =
+    typeof raw.radius_max_level === "number" && raw.radius_max_level > 0
+      ? raw.radius_max_level
+      : raw.radius;
+
   return {
     ...raw,
+    radius: raw.radius,
+    radius_max_level: radiusMaxLevel,
     upgrades,
   };
 }
@@ -314,7 +454,12 @@ function parseEnemies(raw: unknown): EnemyYamlEntry[] {
       return {
         ...parsed,
         id,
-        attack_id: parsed.attack_id === "range" ? "range" : "melee",
+        type: parsed.type === "range" ? "range" : "melee",
+        attack_cooldown:
+          typeof parsed.attack_cooldown === "number" &&
+          parsed.attack_cooldown > 0
+            ? parsed.attack_cooldown
+            : 1,
         attack_range:
           typeof parsed.attack_range === "number" && parsed.attack_range > 0
             ? parsed.attack_range
@@ -333,12 +478,21 @@ function parseKeyedEntries<T extends object>(raw: unknown): Record<string, T> {
   ) as Record<string, T>;
 }
 
-function parseHealthPacks(raw: unknown): HealthConsumableYaml {
-  return parseKeyedEntries<HealthConsumableYamlEntry>(raw);
+function parseHealthPacks(raw: unknown): HealthPickupYaml {
+  return parseKeyedEntries<HealthPickupYamlEntry>(raw);
 }
 
-function parseStaminaStims(raw: unknown): StaminaConsumableYaml {
-  return parseKeyedEntries<StaminaConsumableYamlEntry>(raw);
+function parseStaminaStims(raw: unknown): StaminaPickupYaml {
+  return parseKeyedEntries<StaminaPickupYamlEntry>(raw);
+}
+
+function parseCreditPickup(raw: unknown): CreditPickupYaml {
+  const parsed = (raw as Partial<CreditPickupYaml>) ?? {};
+  return {
+    name: parsed.name,
+    scale:
+      typeof parsed.scale === "number" && parsed.scale > 0 ? parsed.scale : 0.5,
+  };
 }
 
 function parseRoundWaves(raw: unknown): RoundSpawnEntry[][] {
@@ -457,11 +611,13 @@ function parseRoundConsumables(raw: unknown): RoundConsumableConfig[] {
 }
 
 function buildBundle(): GameDataBundle {
+  if (!gameSettingsYaml) throw new Error("game settings yml missing");
   if (!playerYaml) throw new Error("player.yml missing");
   if (!playerLevelCurveYaml) throw new Error("player level curve yml missing");
   if (!playerLevelGrowthYaml)
     throw new Error("player level growth yml missing");
   if (!playerSkillsYaml) throw new Error("player skills yml missing");
+  if (!creditPickupYaml) throw new Error("credit pickup yml missing");
   if (!healthPackYaml) throw new Error("player health pack yml missing");
   if (!staminaStimYaml) throw new Error("player stamina stim yml missing");
   if (!primaryYaml) throw new Error("primary weapon yml missing");
@@ -475,7 +631,10 @@ function buildBundle(): GameDataBundle {
   if (!enemyScalingYaml) throw new Error("enemy-scaling.yml missing");
   if (!roundsYaml) throw new Error("rounds.yml missing");
 
-  const playerRoot = yaml.load(playerYaml) as PlayerYamlRoot;
+  const gameSettings = parseGameSettings(yaml.load(gameSettingsYaml));
+  const playerRoot = applyPlayerEnvOverrides(
+    yaml.load(playerYaml) as PlayerYamlRoot,
+  );
   const playerLevelCurve = yaml.load(
     playerLevelCurveYaml,
   ) as PlayerLevelCurveYaml;
@@ -485,6 +644,7 @@ function buildBundle(): GameDataBundle {
   const playerSkills = yaml.load(playerSkillsYaml) as Array<
     PlayerSkillDashYaml | PlayerSkillBlowYaml | PlayerSkillBurstYaml
   >;
+  const creditPickup = parseCreditPickup(yaml.load(creditPickupYaml));
   const healthPacks = parseHealthPacks(yaml.load(healthPackYaml));
   const staminaStims = parseStaminaStims(yaml.load(staminaStimYaml));
   const primaryWeaponCore = yaml.load(primaryYaml) as PrimaryWeaponCoreYaml;
@@ -509,12 +669,14 @@ function buildBundle(): GameDataBundle {
   }
 
   return {
+    gameSettings,
     player: parsePlayer(
       playerRoot,
       playerLevelGrowth,
       playerLevelCurve,
       playerSkills,
     ),
+    creditPickup,
     healthPacks,
     staminaStims,
     primaryWeapon,

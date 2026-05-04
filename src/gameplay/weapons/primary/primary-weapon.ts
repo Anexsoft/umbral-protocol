@@ -19,6 +19,43 @@ export interface PrimaryWeaponDamageRoll {
   isCritical: boolean;
 }
 
+function isEnvDebugEnabled(): boolean {
+  const value = import.meta.env.VITE_GAME_DEBUG;
+  if (value === undefined || value.trim() === "") return false;
+
+  return value.trim().toLowerCase() === "true";
+}
+
+function readEnvImprovementLevel(
+  value: string | undefined,
+  fallback: number | undefined,
+  maxLevel: number,
+): number {
+  if (!isEnvDebugEnabled()) {
+    return readInitialImprovementLevel(fallback, maxLevel);
+  }
+
+  if (value === undefined || value.trim() === "") {
+    return readInitialImprovementLevel(fallback, maxLevel);
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return readInitialImprovementLevel(fallback, maxLevel);
+  }
+
+  return Phaser.Math.Clamp(Math.floor(parsed), 0, Math.max(0, maxLevel));
+}
+
+function readInitialImprovementLevel(
+  value: number | undefined,
+  maxLevel: number,
+): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return 0;
+
+  return Phaser.Math.Clamp(Math.floor(value), 0, Math.max(0, maxLevel));
+}
+
 export class PrimaryWeapon {
   readonly bullets: Phaser.Physics.Arcade.Group;
   readonly scene: Phaser.Scene;
@@ -51,6 +88,31 @@ export class PrimaryWeapon {
     this.improvementsHandler = new PrimaryWeaponImprovementsHandler();
     this.reloadHandler = new PrimaryWeaponReloadHandler();
     this._improvements = this.improvementsHandler.createInitialLevels();
+    this._improvements.extendedMagazine = readEnvImprovementLevel(
+      import.meta.env.VITE_PLAYER_PRIMARY_EXTENDED_MAGAZINE_LEVEL,
+      this._upgradeConfig.extended_magazine.level,
+      this._upgradeConfig.extended_magazine.max_level,
+    );
+    this._improvements.reloadOptimization = readEnvImprovementLevel(
+      import.meta.env.VITE_PLAYER_PRIMARY_RELOAD_OPTIMIZATION_LEVEL,
+      this._upgradeConfig.reload_optimization.level,
+      this._upgradeConfig.reload_optimization.max_level,
+    );
+    this._improvements.fireRateOptimization = readEnvImprovementLevel(
+      import.meta.env.VITE_PLAYER_PRIMARY_FIRE_RATE_OPTIMIZATION_LEVEL,
+      this._upgradeConfig.fire_rate_optimization.level,
+      this._upgradeConfig.fire_rate_optimization.max_level,
+    );
+    this._improvements.criticalProtocol = readEnvImprovementLevel(
+      import.meta.env.VITE_PLAYER_PRIMARY_CRITICAL_PROTOCOL_LEVEL,
+      this._upgradeConfig.critical_protocol.level,
+      this._upgradeConfig.critical_protocol.max_level,
+    );
+    this._improvements.modeImprovement = readEnvImprovementLevel(
+      import.meta.env.VITE_PLAYER_PRIMARY_MODE_IMPROVEMENT_LEVEL,
+      this._upgradeConfig.mode_improvement.level,
+      this._upgradeConfig.mode_improvement.max_level,
+    );
     this._ammo = this.maxAmmo;
   }
 

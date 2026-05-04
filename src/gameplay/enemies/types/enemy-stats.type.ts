@@ -1,10 +1,9 @@
 export interface EnemyStats {
-  vit: number;
-  attack: number;
+  hp: number;
+  damage: number;
   speed: number;
   defense: number;
   rewards: [number, number];
-  score: [number, number];
-  xp?: [number, number];
+  xp: [number, number];
   scale: number;
 }

@@ -1,5 +1,7 @@
 import * as Phaser from "phaser";
 
+import { BASE_UNIT_PX } from "@config/constants";
+
 import { getTheme, hexToNumber } from "@data/theme/theme";
 
 const theme = getTheme();
@@ -15,21 +17,42 @@ export class CreditPickup extends Phaser.GameObjects.Container {
   private bobTween?: Phaser.Tweens.Tween;
   private bobBaseY: number;
 
-  constructor(scene: Phaser.Scene, x: number, y: number, credits: number) {
+  constructor(
+    scene: Phaser.Scene,
+    x: number,
+    y: number,
+    credits: number,
+    scale: number,
+  ) {
     super(scene, x, y);
 
     this.credits = Math.max(0, Math.round(credits));
     this.bobBaseY = y;
 
+    const visualScale = Math.max(0.25, scale);
+    const sizePx = BASE_UNIT_PX * visualScale;
+    const glowWidth = Math.round(sizePx);
+    const glowHeight = Math.round(sizePx * 0.5);
+    const boxWidth = Math.round(sizePx * 0.7);
+    const boxHeight = Math.round(sizePx * 0.34);
+    const bodyRadius = Math.round(sizePx * 0.26);
+
     this.glow = scene.add
-      .rectangle(0, 0, 52, 24, hexToNumber(theme.semantic.fx.health_pack), 0.18)
+      .rectangle(
+        0,
+        0,
+        glowWidth,
+        glowHeight,
+        hexToNumber(theme.semantic.fx.health_pack),
+        0.18,
+      )
       .setStrokeStyle(1, hexToNumber(theme.semantic.fx.health_pack), 0.32);
     this.box = scene.add
       .rectangle(
         0,
         0,
-        36,
-        16,
+        boxWidth,
+        boxHeight,
         hexToNumber(theme.semantic.surface.overlay),
         0.92,
       )
@@ -37,7 +60,7 @@ export class CreditPickup extends Phaser.GameObjects.Container {
     this.label = scene.add
       .text(0, 0, this.formatValue(), {
         fontFamily: theme.typography.fonts.mono,
-        fontSize: theme.typography.sizes.sm,
+        fontSize: Math.max(10, Math.round(sizePx * 0.28)),
         fontStyle: theme.typography.weights.bold,
         color: theme.semantic.text.success,
       })
@@ -52,7 +75,7 @@ export class CreditPickup extends Phaser.GameObjects.Container {
     body.setAllowGravity(false);
     body.setImmovable(true);
     body.pushable = false;
-    body.setCircle(16, -16, -16);
+    body.setCircle(bodyRadius, -bodyRadius, -bodyRadius);
 
     this.glowTween = scene.tweens.add({
       targets: this.glow,

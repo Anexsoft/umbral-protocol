@@ -3,19 +3,25 @@
   description: "Short burst in aim direction for repositioning or escape."
   cooldown: 3
   stamina_cost: 20
+  distance_bonus_ratio_max_level: 0.3
 - name: "Blast"
   key: "Q"
   description: "Short-range radial blast centered on the operator. The shockwave blooms from the body and expands outward, damaging all hostiles inside the final radius."
-  cooldown: 10
+  cooldown: 15
   damage_multiplier: 1.5
-  radius_max: 120
+  radius: 120
+  radius_bonus_ratio_max_level: 2
   stamina_cost: 30
 - name: "Burst"
   key: "E"
   description: "Combat overdrive that accelerates movement and weapon cadence for a short window."
-  cooldown: 6
+  cooldown: 10
   duration: 4
+  duration_max_level: 10
   move_speed_bonus_ratio: 0.3
+  move_speed_bonus_ratio_max_level: 0.5
   fire_rate_bonus_ratio: 0.45
+  fire_rate_bonus_ratio_max_level: 0.9
   reload_speed_bonus_ratio: 0.35
+  reload_speed_bonus_ratio_max_level: 0.7
   stamina_cost: 15

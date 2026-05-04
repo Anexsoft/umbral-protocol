@@ -7,7 +7,8 @@ export interface EnemyYamlEntry {
   name: string;
   description?: string;
   boss?: boolean;
-  attack_id?: EnemyAttackType;
+  type?: EnemyAttackType;
+  attack_cooldown?: number;
   attack_range?: number;
   base_stats: EnemyBaseStats;
 }

@@ -1,6 +1,6 @@
 import * as Phaser from "phaser";
 
-import type { Enemy } from "@gameplay/enemies/enemy";
+import type { Enemy } from "@gameplay/enemies/Enemy";
 import type { BlowSkillPayload } from "@gameplay/player/types";
 
 type BlowSkillImpactHandlerInput = {

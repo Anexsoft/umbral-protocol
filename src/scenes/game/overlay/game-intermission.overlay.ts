@@ -7,21 +7,18 @@ const theme = getTheme();
 export type GameIntermissionOverlayInput = {
   scene: Phaser.Scene;
   depth: number;
-  secondsRemaining: number;
   onProceed: () => void;
 };
 
 export interface GameIntermissionOverlayControls {
   cleanup: () => void;
-  skipHandler: () => void;
-  timer: Phaser.Time.TimerEvent;
+  continueHandler: () => void;
 }
 
 export class GameIntermissionOverlay {
   show({
     scene,
     depth,
-    secondsRemaining,
     onProceed,
   }: GameIntermissionOverlayInput): GameIntermissionOverlayControls {
     const { width, height } = scene.scale;
@@ -38,7 +35,8 @@ export class GameIntermissionOverlay {
         0.88,
       )
       .setScrollFactor(0)
-      .setDepth(depth);
+      .setDepth(depth)
+      .setInteractive({ useHandCursor: true });
 
     const heading = scene.add
       .text(cx, cy - 100, "WAVE COMPLETE", {
@@ -51,9 +49,8 @@ export class GameIntermissionOverlay {
       .setScrollFactor(0)
       .setDepth(depth + 1);
 
-    let remainingSeconds = secondsRemaining;
     const countdown = scene.add
-      .text(cx, cy + 10, `Next wave in ${remainingSeconds}s`, {
+      .text(cx, cy + 10, `Click when you're ready`, {
         fontFamily: theme.typography.fonts.mono,
         fontSize: theme.typography.sizes.xxl,
         color: theme.semantic.text.soft,
@@ -63,7 +60,7 @@ export class GameIntermissionOverlay {
       .setDepth(depth + 1);
 
     const hint = scene.add
-      .text(cx, cy + 52, "[ ENTER - SKIP ]", {
+      .text(cx, cy + 52, "[ CLICK TO CONTINUE ]", {
         fontFamily: theme.typography.fonts.mono,
         fontSize: theme.typography.sizes.md,
         color: theme.semantic.text.accent_scan,
@@ -87,30 +84,29 @@ export class GameIntermissionOverlay {
       onProceed();
     };
 
-    const timer = scene.time.addEvent({
-      delay: 1000,
-      loop: true,
-      callback: () => {
-        remainingSeconds -= 1;
-        if (remainingSeconds <= 0) {
-          proceedToNextWave();
-          return;
-        }
-        countdown.setText(`Next wave in ${remainingSeconds}s`);
-      },
-    });
+    bg.on("pointerdown", proceedToNextWave);
+    countdown.setInteractive({ useHandCursor: true }).on(
+      "pointerdown",
+      proceedToNextWave,
+    );
+    hint.setInteractive({ useHandCursor: true }).on(
+      "pointerdown",
+      proceedToNextWave,
+    );
 
     return {
       cleanup: () => {
+        bg.off("pointerdown", proceedToNextWave);
+        countdown.off("pointerdown", proceedToNextWave);
+        hint.off("pointerdown", proceedToNextWave);
         bg.destroy();
         heading.destroy();
         countdown.destroy();
         hint.destroy();
       },
-      skipHandler: () => {
+      continueHandler: () => {
         proceedToNextWave();
       },
-      timer,
     };
   }
 }

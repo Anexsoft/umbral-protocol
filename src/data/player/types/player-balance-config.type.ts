@@ -5,20 +5,27 @@ import type { PlayerSkillConfig } from "@data/player/types/player-skill-config.t
 export interface PlayerBalanceConfig {
   name: string;
   baseValues: PlayerBaseValues;
+  initialLevel: number;
   staminaRecoveryRate: number;
   levelGrowth: PlayerLevelGrowthConfig;
   dashCooldownSec: number;
   dashStaminaCost: number;
+  dashDistanceBonusRatioMaxLevel: number;
   blowCooldownSec: number;
   blowStaminaCost: number;
   blowDamageMultiplier: number;
   blowRadiusMax: number;
+  blowRadiusBonusRatioMaxLevel: number;
   burstCooldownSec: number;
   burstDurationSec: number;
+  burstDurationSecMaxLevel: number;
   burstStaminaCost: number;
   burstMoveSpeedBonusRatio: number;
+  burstMoveSpeedBonusRatioMaxLevel: number;
   burstFireRateBonusRatio: number;
+  burstFireRateBonusRatioMaxLevel: number;
   burstReloadSpeedBonusRatio: number;
+  burstReloadSpeedBonusRatioMaxLevel: number;
   levelXpThresholds: number[];
   skills: PlayerSkillConfig[];
 }

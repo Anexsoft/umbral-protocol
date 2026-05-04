@@ -5,6 +5,11 @@ import type { PauseTabRenderContext } from "../pause.types";
 const theme = getTheme();
 
 const COLUMN_GAP = 28;
+
+function getUpgradeProgress(level: number, maxLevel: number): number {
+  if (maxLevel <= 0) return 0;
+  return Math.max(0, Math.min(1, level / maxLevel));
+}
 const ENTRY_GAP = 18;
 const ENTRY_PADDING_X = 16;
 const ENTRY_PADDING_Y = 14;
@@ -328,7 +333,7 @@ export function renderPauseUpgradesTab(context: PauseTabRenderContext): void {
             );
           },
           currentValues: [
-            `AMMO_BONUS +${context.player.primaryWeapon.improvements.extendedMagazine * context.player.primaryWeapon.improvementConfig.extended_magazine.ammo_bonus_per_level}`,
+            `AMMO_BONUS +${Math.round(context.player.primaryWeapon.improvementConfig.extended_magazine.ammo_bonus_max_level * getUpgradeProgress(context.player.primaryWeapon.improvements.extendedMagazine, context.player.primaryWeapon.improvementConfig.extended_magazine.max_level))}`,
             `MAX_AMMO ${context.player.primaryWeapon.maxAmmo}`,
           ],
         },
@@ -367,7 +372,7 @@ export function renderPauseUpgradesTab(context: PauseTabRenderContext): void {
             );
           },
           currentValues: [
-            `RELOAD_REDUCTION -${formatPercent(context.player.primaryWeapon.improvements.reloadOptimization * context.player.primaryWeapon.improvementConfig.reload_optimization.reload_time_reduction_ratio_per_level)}`,
+            `RELOAD_REDUCTION -${formatPercent(context.player.primaryWeapon.improvementConfig.reload_optimization.reload_time_reduction_ratio_max_level * getUpgradeProgress(context.player.primaryWeapon.improvements.reloadOptimization, context.player.primaryWeapon.improvementConfig.reload_optimization.max_level))}`,
             `RELOAD_TIME ${context.player.primaryWeapon.modes[context.player.primaryWeapon.currentMode].reload_time.toFixed(2)}S`,
           ],
         },
@@ -403,7 +408,7 @@ export function renderPauseUpgradesTab(context: PauseTabRenderContext): void {
             );
           },
           currentValues: [
-            `FIRE_RATE_REDUCTION -${formatPercent(context.player.primaryWeapon.improvements.fireRateOptimization * context.player.primaryWeapon.improvementConfig.fire_rate_optimization.fire_rate_reduction_ratio_per_level)}`,
+            `FIRE_RATE_REDUCTION -${formatPercent(context.player.primaryWeapon.improvementConfig.fire_rate_optimization.fire_rate_reduction_ratio_max_level * getUpgradeProgress(context.player.primaryWeapon.improvements.fireRateOptimization, context.player.primaryWeapon.improvementConfig.fire_rate_optimization.max_level))}`,
             `SHOT_INTERVAL ${(context.player.primaryWeapon.modes[context.player.primaryWeapon.currentMode].fire_rate * context.player.primaryWeapon.getFireRateIntervalMultiplier()).toFixed(2)}S`,
           ],
         },
@@ -442,7 +447,7 @@ export function renderPauseUpgradesTab(context: PauseTabRenderContext): void {
             );
           },
           currentValues: [
-            `CRIT_CHANCE ${Math.round(context.player.primaryWeapon.improvements.criticalProtocol * context.player.primaryWeapon.improvementConfig.critical_protocol.crit_chance_ratio_per_level * 100)}%`,
+            `CRIT_CHANCE ${Math.round(context.player.primaryWeapon.improvementConfig.critical_protocol.crit_chance_ratio_max_level * getUpgradeProgress(context.player.primaryWeapon.improvements.criticalProtocol, context.player.primaryWeapon.improvementConfig.critical_protocol.max_level) * 100)}%`,
             `CRIT_DAMAGE x${context.player.primaryWeapon.improvementConfig.critical_protocol.crit_damage_multiplier.toFixed(2)}`,
           ],
         },
@@ -481,10 +486,10 @@ export function renderPauseUpgradesTab(context: PauseTabRenderContext): void {
             );
           },
           currentValues: [
-            `SINGLE_RATE -${formatPercent(context.player.primaryWeapon.improvements.modeImprovement * context.player.primaryWeapon.improvementConfig.mode_improvement.single.fire_rate_reduction_ratio_per_level)}`,
-            `SPREAD_PELLETS +${Math.floor(context.player.primaryWeapon.improvements.modeImprovement / Math.max(1, context.player.primaryWeapon.improvementConfig.mode_improvement.spread.bonus_pellets_every_levels))}`,
-            `SPREAD_DAMAGE +${formatPercent(context.player.primaryWeapon.improvements.modeImprovement * context.player.primaryWeapon.improvementConfig.mode_improvement.spread.spread_damage_multiplier_bonus_per_level)}`,
-            `POWER_DAMAGE +${formatPercent(context.player.primaryWeapon.improvements.modeImprovement * context.player.primaryWeapon.improvementConfig.mode_improvement.power.damage_multiplier_bonus_per_level)}`,
+            `SINGLE_RATE -${formatPercent(context.player.primaryWeapon.improvementConfig.mode_improvement.single.fire_rate_reduction_ratio_max_level * getUpgradeProgress(context.player.primaryWeapon.improvements.modeImprovement, context.player.primaryWeapon.improvementConfig.mode_improvement.max_level))}`,
+            `SPREAD_PELLETS +${Math.round(context.player.primaryWeapon.improvementConfig.mode_improvement.spread.bonus_pellets_max_level * getUpgradeProgress(context.player.primaryWeapon.improvements.modeImprovement, context.player.primaryWeapon.improvementConfig.mode_improvement.max_level))}`,
+            `SPREAD_DAMAGE +${formatPercent(context.player.primaryWeapon.improvementConfig.mode_improvement.spread.spread_damage_multiplier_bonus_max_level * getUpgradeProgress(context.player.primaryWeapon.improvements.modeImprovement, context.player.primaryWeapon.improvementConfig.mode_improvement.max_level))}`,
+            `POWER_DAMAGE +${formatPercent(context.player.primaryWeapon.improvementConfig.mode_improvement.power.damage_multiplier_bonus_max_level * getUpgradeProgress(context.player.primaryWeapon.improvements.modeImprovement, context.player.primaryWeapon.improvementConfig.mode_improvement.max_level))}`,
           ],
         },
       ];
@@ -524,8 +529,8 @@ export function renderPauseUpgradesTab(context: PauseTabRenderContext): void {
             );
           },
           currentValues: [
-            `DAMAGE_RATIO +${formatPercent(context.player.secondaryWeapon.improvements.knifeEnhancement * context.player.secondaryWeapon.improvementConfig.knife_enhancement.damage_bonus_ratio_per_level)}`,
-            `ATTACK_RADIUS +${context.player.secondaryWeapon.improvements.knifeEnhancement * context.player.secondaryWeapon.improvementConfig.knife_enhancement.attack_radius_bonus_per_level}`,
+            `DAMAGE_RATIO +${formatPercent(context.player.secondaryWeapon.improvementConfig.knife_enhancement.damage_bonus_ratio_max_level * getUpgradeProgress(context.player.secondaryWeapon.improvements.knifeEnhancement, context.player.secondaryWeapon.improvementConfig.knife_enhancement.max_level))}`,
+            `RADIUS +${Math.round(context.player.secondaryWeapon.improvementConfig.knife_enhancement.radius_bonus_max_level * getUpgradeProgress(context.player.secondaryWeapon.improvements.knifeEnhancement, context.player.secondaryWeapon.improvementConfig.knife_enhancement.max_level))}`,
           ],
         },
       ];

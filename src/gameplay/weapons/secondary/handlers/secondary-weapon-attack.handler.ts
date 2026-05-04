@@ -1,17 +1,21 @@
 import * as Phaser from "phaser";
 
+import { BASE_UNIT_PX } from "@config/constants";
+
 import { getTheme, hexToNumber } from "@data/theme/theme";
 
-import type { Enemy } from "@gameplay/enemies/enemy";
+import type { Enemy } from "@gameplay/enemies/Enemy";
 import type { SecondaryWeapon } from "@gameplay/weapons/secondary/secondary-weapon";
 
 const theme = getTheme();
+const KNIFE_HAND_OFFSET_PX = BASE_UNIT_PX * 0.34;
 
 type SecondaryWeaponAttackHandlerInput = {
   weapon: SecondaryWeapon;
   x: number;
   y: number;
   scaledDamage?: number;
+  playerLevel?: number;
 };
 
 export class SecondaryWeaponAttackHandler {
@@ -20,6 +24,7 @@ export class SecondaryWeaponAttackHandler {
     x,
     y,
     scaledDamage,
+    playerLevel,
   }: SecondaryWeaponAttackHandlerInput): boolean {
     if (!weapon.isReady) {
       return false;
@@ -31,7 +36,14 @@ export class SecondaryWeaponAttackHandler {
       pointer.y,
     );
     const angle = Phaser.Math.Angle.Between(x, y, worldPoint.x, worldPoint.y);
-    this.performMeleeHit(weapon, x, y, angle, scaledDamage ?? 1);
+    this.performMeleeHit(
+      weapon,
+      x,
+      y,
+      angle,
+      scaledDamage ?? 1,
+      playerLevel ?? 1,
+    );
 
     weapon.isReady = false;
     weapon.cooldownTimerMs = weapon.cooldownTimeSec * 1000;
@@ -44,8 +56,9 @@ export class SecondaryWeaponAttackHandler {
     y: number,
     angle: number,
     damage: number,
+    playerLevel: number,
   ): void {
-    const slashRadius = weapon.attackRadius;
+    const slashRadius = weapon.getRadius(playerLevel);
     const halfArc = Phaser.Math.DegToRad(48);
     const sceneWithEnemies = weapon.scene as Phaser.Scene & {
       enemies?: Phaser.Physics.Arcade.Group;
@@ -68,37 +81,75 @@ export class SecondaryWeaponAttackHandler {
 
     const flash = weapon.scene.add.graphics();
     const fillColor = hexToNumber(theme.semantic.gfx.melee_flash);
-    const points: Phaser.Math.Vector2[] = [new Phaser.Math.Vector2(x, y)];
-
-    for (let i = 0; i <= 12; i += 1) {
-      const t = i / 12;
-      const arcAngle = angle - halfArc + halfArc * 2 * t;
-      points.push(
-        new Phaser.Math.Vector2(
-          x + Math.cos(arcAngle) * slashRadius,
-          y + Math.sin(arcAngle) * slashRadius,
-        ),
-      );
-    }
-
     flash.setDepth(60);
-    flash.fillStyle(fillColor, 0.32);
-    flash.lineStyle(3, fillColor, 0.9);
-    flash.beginPath();
-    flash.moveTo(points[0].x, points[0].y);
-    for (const point of points.slice(1)) {
-      flash.lineTo(point.x, point.y);
-    }
-    flash.closePath();
-    flash.fillPath();
-    flash.strokePath();
+    const originX = x + Math.cos(angle) * KNIFE_HAND_OFFSET_PX;
+    const originY = y + Math.sin(angle) * KNIFE_HAND_OFFSET_PX;
+
+    const swingState = {
+      sweep: 0,
+      reach: 0,
+      alpha: 1,
+    };
+
+    const renderSwing = (): void => {
+      const sweepAngle = angle - halfArc + halfArc * 2 * swingState.sweep;
+      const tipX = originX + Math.cos(sweepAngle) * swingState.reach;
+      const tipY = originY + Math.sin(sweepAngle) * swingState.reach;
+      const bladeWidth = Math.max(10, slashRadius * 0.16);
+      const normalAngle = sweepAngle + Math.PI / 2;
+      const innerRadius = Math.max(10, swingState.reach * 0.22);
+
+      const baseLeft = new Phaser.Math.Vector2(
+        originX + Math.cos(normalAngle) * bladeWidth * 0.35,
+        originY + Math.sin(normalAngle) * bladeWidth * 0.35,
+      );
+      const baseRight = new Phaser.Math.Vector2(
+        originX - Math.cos(normalAngle) * bladeWidth * 0.35,
+        originY - Math.sin(normalAngle) * bladeWidth * 0.35,
+      );
+      const midLeft = new Phaser.Math.Vector2(
+        originX + Math.cos(sweepAngle) * innerRadius +
+          Math.cos(normalAngle) * bladeWidth * 0.5,
+        originY + Math.sin(sweepAngle) * innerRadius +
+          Math.sin(normalAngle) * bladeWidth * 0.5,
+      );
+      const midRight = new Phaser.Math.Vector2(
+        originX + Math.cos(sweepAngle) * innerRadius -
+          Math.cos(normalAngle) * bladeWidth * 0.5,
+        originY + Math.sin(sweepAngle) * innerRadius -
+          Math.sin(normalAngle) * bladeWidth * 0.5,
+      );
+
+      flash.clear();
+      flash.fillStyle(fillColor, 0.22 * swingState.alpha);
+      flash.lineStyle(4, fillColor, 0.95 * swingState.alpha);
+      flash.beginPath();
+      flash.moveTo(baseLeft.x, baseLeft.y);
+      flash.lineTo(midLeft.x, midLeft.y);
+      flash.lineTo(tipX, tipY);
+      flash.lineTo(midRight.x, midRight.y);
+      flash.lineTo(baseRight.x, baseRight.y);
+      flash.closePath();
+      flash.fillPath();
+      flash.strokePath();
+
+      flash.lineStyle(2, fillColor, 0.65 * swingState.alpha);
+      flash.beginPath();
+      flash.moveTo(originX, originY);
+      flash.lineTo(tipX, tipY);
+      flash.strokePath();
+    };
+
+    renderSwing();
 
     weapon.scene.tweens.add({
-      targets: flash,
+      targets: swingState,
+      sweep: 1,
+      reach: slashRadius,
       alpha: 0,
-      scaleX: 1.08,
-      scaleY: 1.08,
-      duration: 120,
+      ease: "Cubic.Out",
+      duration: 210,
+      onUpdate: renderSwing,
       onComplete: () => flash.destroy(),
     });
   }

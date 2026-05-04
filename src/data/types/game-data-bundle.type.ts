@@ -1,11 +1,13 @@
+import type { GameSettingsConfig } from "@data/game/types";
 import type {
   EnemyLevelScalingConfig,
   EnemyYamlEntry,
 } from "@data/enemies/types";
 import type {
-  HealthConsumableYaml,
-  StaminaConsumableYaml,
-} from "@data/consumables/types";
+  CreditPickupYaml,
+  HealthPickupYaml,
+  StaminaPickupYaml,
+} from "@data/pickups/types";
 import type { PlayerBalanceConfig } from "@data/player/types";
 import type {
   RoundConsumableConfig,
@@ -15,9 +17,11 @@ import type { PrimaryWeaponYaml } from "@data/weapons/primary/types";
 import type { SecondaryWeaponYaml } from "@data/weapons/secondary/types";
 
 export interface GameDataBundle {
+  gameSettings: GameSettingsConfig;
   player: PlayerBalanceConfig;
-  healthPacks: HealthConsumableYaml;
-  staminaStims: StaminaConsumableYaml;
+  creditPickup: CreditPickupYaml;
+  healthPacks: HealthPickupYaml;
+  staminaStims: StaminaPickupYaml;
   primaryWeapon: PrimaryWeaponYaml;
   secondaryWeapon: SecondaryWeaponYaml;
   enemies: EnemyYamlEntry[];
